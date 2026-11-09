@@ -3,50 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cows vs. Aliens</title>
+    <title>Cows vs. Aliens: Galactic Pasture</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
         <header id="hud">
-            <div class="stat-box">🥛 Milk: <span id="milk-count">100</span></div>
-            <div class="stat-box">🌊 Wave: <span id="wave-count">1</span></div>
+            <div class="stat-box">🥛 Milk: <span id="milk-count">150</span></div>
+            <div class="stat-box">🌍 Biome: <span id="biome-name">Green Pasture</span></div>
+            <div class="stat-box">🌊 Wave: <span id="wave-count">1</span>/3</div>
             <div class="stat-box">❤️ Barn HP: <span id="barn-hp">5</span></div>
         </header>
 
-        <div id="shop-bar">
-            <button class="cow-card selected" data-type="dairy" data-cost="50">
-                <span class="emoji">🐄</span>
-                <span class="name">Dairy Cow</span>
-                <span class="cost">50 🥛</span>
-                <span class="desc">Produces Milk</span>
-            </button>
-            <button class="cow-card" data-type="milkLauncher" data-cost="100">
-                <span class="emoji">🐮</span>
-                <span class="name">Milk Shooter</span>
-                <span class="cost">100 🥛</span>
-                <span class="desc">Fires Milk Blasts</span>
-            </button>
-            <button class="cow-card" data-type="bullWall" data-cost="75">
-                <span class="emoji">🐂</span>
-                <span class="name">Armored Bull</span>
-                <span class="cost">75 🥛</span>
-                <span class="desc">High HP Blocker</span>
-            </button>
-            <button class="cow-card" data-type="plasmaCow" data-cost="200">
-                <span class="emoji">🛸</span>
-                <span class="name">Cyber Cow</span>
-                <span class="cost">200 🥛</span>
-                <span class="desc">Rapid Laser Fire</span>
-            </button>
-        </div>
+        <div id="shop-bar"></div>
 
         <div id="canvas-wrapper">
             <canvas id="gameCanvas" width="900" height="500"></canvas>
             <div id="overlay" class="hidden">
-                <h1 id="overlay-title">Game Over</h1>
-                <p id="overlay-sub">The aliens abducted your herd!</p>
-                <button id="restart-btn">Play Again</button>
+                <h1 id="overlay-title">Biome Overrun!</h1>
+                <p id="overlay-sub">The aliens breached your barn!</p>
+                <button id="restart-btn">Retry Current Biome</button>
             </div>
         </div>
     </div>
