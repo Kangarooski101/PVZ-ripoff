@@ -6,7 +6,7 @@
 }
 
 body {
-    background-color: #121220;
+    background-color: #10101c;
     color: #fff;
     display: flex;
     justify-content: center;
@@ -18,20 +18,26 @@ body {
     background-color: #1b263b;
     padding: 16px;
     border-radius: 12px;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
-    width: 936px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
+    width: 1136px;
 }
 
 #hud {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     background-color: #0d1b2a;
-    padding: 10px 20px;
+    padding: 10px 18px;
     border-radius: 8px;
     margin-bottom: 12px;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: bold;
     border: 1px solid #415a77;
+}
+
+#hud .hint {
+    color: #ffd166;
+    font-size: 0.88rem;
 }
 
 #shop-bar {
@@ -39,11 +45,11 @@ body {
     gap: 8px;
     margin-bottom: 12px;
     overflow-x: auto;
-    padding-bottom: 6px;
+    padding-bottom: 8px;
 }
 
 #shop-bar::-webkit-scrollbar {
-    height: 8px;
+    height: 9px;
 }
 
 #shop-bar::-webkit-scrollbar-thumb {
@@ -52,11 +58,11 @@ body {
 }
 
 .cow-card {
-    min-width: 112px;
+    min-width: 116px;
     background-color: #24344d;
     border: 2px solid #415a77;
     border-radius: 8px;
-    padding: 8px 6px;
+    padding: 7px 6px;
     color: white;
     cursor: pointer;
     display: flex;
@@ -74,32 +80,32 @@ body {
 .cow-card.selected {
     border-color: #ffd166;
     background-color: #2e4568;
-    box-shadow: 0 0 10px rgba(255, 209, 102, 0.4);
+    box-shadow: 0 0 10px rgba(255, 209, 102, 0.45);
 }
 
 .cow-card.disabled {
-    opacity: 0.45;
+    opacity: 0.42;
     cursor: not-allowed;
 }
 
 .cow-card .emoji {
-    font-size: 1.7rem;
+    font-size: 1.65rem;
 }
 
 .cow-card .name {
     font-weight: bold;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     margin-top: 2px;
 }
 
 .cow-card .cost {
     color: #ffd166;
     font-weight: bold;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
 }
 
 .cow-card .desc {
-    font-size: 0.68rem;
+    font-size: 0.67rem;
     color: #b8c4d9;
     margin-top: 2px;
     line-height: 1.1;
@@ -107,7 +113,7 @@ body {
 
 #canvas-wrapper {
     position: relative;
-    width: 900px;
+    width: 1100px;
     height: 500px;
     border-radius: 8px;
     overflow: hidden;
@@ -121,7 +127,7 @@ canvas {
 #overlay {
     position: absolute;
     inset: 0;
-    background: rgba(13, 27, 42, 0.9);
+    background: rgba(13, 27, 42, 0.92);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -147,4 +153,3 @@ canvas {
 #restart-btn:hover {
     background-color: #fcbf49;
 }
-
