@@ -7,8 +7,8 @@ const COLS = 9;
 
 let biomeIndex = 0;
 let waveInBiome = 1;
-let milk = 150;
-let barnHp = 5;
+let milk = 200;
+let barnHp = 20;
 let frame = 0;
 let gameOver = false;
 let selectedCowType = 'dairy';
