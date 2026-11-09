@@ -5,9 +5,10 @@ const CELL_SIZE = 100;
 const ROWS = 5;
 const COLS = 9;
 
-let milk = 100;
-let wave = 1;
-let barnHp = 50;
+let biomeIndex = 0;
+let waveInBiome = 1;
+let milk = 150;
+let barnHp = 5;
 let frame = 0;
 let gameOver = false;
 let selectedCowType = 'dairy';
@@ -15,55 +16,89 @@ let selectedCowType = 'dairy';
 let cows = new Array();
 let aliens = new Array();
 let projectiles = new Array();
+let alienProjectiles = new Array();
 let floatingTexts = new Array();
 
 let aliensToSpawn = 0;
 let spawnTimer = 0;
 let waveCooldown = 180;
 
-const COW_TYPES = {
-    dairy: { emoji: '🐄', cost: 50, hp: 100, rate: 300, timer: 0 },
-    milkLauncher: { emoji: '🐮', cost: 100, hp: 120, rate: 90, timer: 0, dmg: 25, speed: 6, color: '#ffffff' },
-    bullWall: { emoji: '🐂', cost: 75, hp: 450, rate: 0, timer: 0 },
-    plasmaCow: { emoji: '🛸', cost: 200, hp: 150, rate: 35, timer: 0, dmg: 20, speed: 10, color: '#00f5d4' }
-};
+const BIOMES = new Array(
+    { name: 'Green Pasture', light: '#52b788', dark: '#40916c', boss: 'mothershipBoss' },
+    { name: 'Scorched Desert', light: '#e9c46a', dark: '#d4a373', boss: 'warlordBoss' },
+    { name: 'Frozen Tundra', light: '#90e0ef', dark: '#48cae4', boss: 'cryoTitanBoss' },
+    { name: 'Volcanic Core', light: '#9b2226', dark: '#6a040f', boss: 'overlordBoss' }
+);
+
+const COW_LIST = new Array(
+    { id: 'dairy', name: 'Dairy Cow', emoji: '🐄', cost: 50, hp: 100, desc: '+25 Milk/5s', role: 'milk', rate: 300, amount: 25 },
+    { id: 'milkShooter', name: 'Milk Shooter', emoji: '🐮', cost: 100, hp: 120, desc: 'Basic Milk Shot', role: 'shooter', rate: 85, dmg: 25, speed: 6, color: '#ffffff' },
+    { id: 'spikyBull', name: 'Spiky Bull', emoji: '🐂', cost: 85, hp: 480, desc: 'Tank + Thorn Dmg', role: 'wall', thorns: 0.45 },
+    { id: 'frostCow', name: 'Frost Cow', emoji: '🧊', cost: 135, hp: 120, desc: 'Slows Enemies', role: 'shooter', rate: 95, dmg: 20, speed: 6, color: '#00b4d8', effect: 'slow' },
+    { id: 'viperCow', name: 'Viper Cow', emoji: '🐍', cost: 150, hp: 120, desc: 'Poison Damage', role: 'shooter', rate: 90, dmg: 15, speed: 6, color: '#80ed99', effect: 'poison' },
+    { id: 'gatlingCow', name: 'Gatling Calf', emoji: '🔫', cost: 165, hp: 110, desc: 'Rapid Low Dmg', role: 'shooter', rate: 24, dmg: 9, speed: 9, color: '#ffd166' },
+    { id: 'boomBovine', name: 'Boom Bovine', emoji: '💣', cost: 125, hp: 90, desc: '3x3 Explosion', role: 'bomb', fuse: 65, dmg: 350 },
+    { id: 'goldenCow', name: 'Golden Cow', emoji: '👑', cost: 175, hp: 150, desc: '+60 Milk/5.5s', role: 'milk', rate: 330, amount: 60 },
+    { id: 'sniperBull', name: 'Sniper Bull', emoji: '🎯', cost: 210, hp: 120, desc: 'Heavy Piercing', role: 'shooter', rate: 165, dmg: 115, speed: 13, color: '#ff006e' },
+    { id: 'medicCow', name: 'Medic Cow', emoji: '🩺', cost: 140, hp: 140, desc: 'Heals 3x3 Herd', role: 'healer', rate: 120, heal: 22 },
+    { id: 'teslaCow', name: 'Tesla Cow', emoji: '⚡', cost: 240, hp: 140, desc: 'Chain Lightning', role: 'shooter', rate: 105, dmg: 35, speed: 8, color: '#c77dff', effect: 'chain' },
+    { id: 'cyberCow', name: 'Cyber Cow', emoji: '🛸', cost: 300, hp: 180, desc: 'Plasma Cannon', role: 'shooter', rate: 32, dmg: 28, speed: 11, color: '#00f5d4' }
+);
+
+const COW_MAP = {};
+COW_LIST.forEach(c => { COW_MAP[c.id] = c; });
 
 const ALIEN_TYPES = {
-    grunt: { emoji: '👽', hp: 100, speed: 0.6, dmg: 0.4, reward: 25, size: 40 },
-    runner: { emoji: '👾', hp: 70, speed: 1.3, dmg: 0.3, reward: 30, size: 38 },
-    brute: { emoji: '👹', hp: 300, speed: 0.35, dmg: 0.8, reward: 60, size: 48 },
-    mothershipBoss: { emoji: '🛸', hp: 1200, speed: 0.2, dmg: 1.5, reward: 250, size: 65, isBoss: true, bossType: 'spawner' },
-    warlordBoss: { emoji: '👾', hp: 1600, speed: 0.3, dmg: 2.0, reward: 400, size: 65, isBoss: true, bossType: 'teleporter' }
+    grunt: { emoji: '👽', hp: 110, speed: 0.55, dmg: 0.4, reward: 25, size: 38 },
+    runner: { emoji: '👾', hp: 75, speed: 1.25, dmg: 0.35, reward: 30, size: 36 },
+    brute: { emoji: '👹', hp: 340, speed: 0.35, dmg: 0.8, reward: 60, size: 46 },
+    blaster: { emoji: '🔫', hp: 140, speed: 0.45, dmg: 0.3, reward: 45, size: 40, isRanged: true, fireRate: 150, shotDmg: 18 },
+    charger: { emoji: '🦏', hp: 210, speed: 1.55, dmg: 1.1, reward: 55, size: 44, isCharger: true },
+    ghost: { emoji: '👻', hp: 130, speed: 0.65, dmg: 0.5, reward: 50, size: 40, isGhost: true },
+    mothershipBoss: { emoji: '🛸', hp: 1300, speed: 0.2, dmg: 1.4, reward: 250, size: 64, isBoss: true, bossType: 'spawner' },
+    warlordBoss: { emoji: '🧙', hp: 1700, speed: 0.25, dmg: 1.8, reward: 350, size: 64, isBoss: true, bossType: 'teleporter' },
+    cryoTitanBoss: { emoji: '🥶', hp: 2200, speed: 0.2, dmg: 2.0, reward: 450, size: 66, isBoss: true, bossType: 'freezer' },
+    overlordBoss: { emoji: '🐲', hp: 3000, speed: 0.18, dmg: 2.5, reward: 600, size: 70, isBoss: true, bossType: 'overlord' }
 };
-
 const milkEl = document.getElementById('milk-count');
+const biomeEl = document.getElementById('biome-name');
 const waveEl = document.getElementById('wave-count');
 const barnHpEl = document.getElementById('barn-hp');
-const shopCards = document.querySelectorAll('.cow-card');
+const shopBar = document.getElementById('shop-bar');
 const overlay = document.getElementById('overlay');
 const restartBtn = document.getElementById('restart-btn');
 
-shopCards.forEach(card => {
-    card.addEventListener('click', () => {
-        shopCards.forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        selectedCowType = card.dataset.type;
+// Build 12-Cow Shop Cards Dynamically
+COW_LIST.forEach(cow => {
+    const btn = document.createElement('button');
+    btn.className = 'cow-card' + (cow.id === selectedCowType ? ' selected' : '');
+    btn.dataset.type = cow.id;
+    btn.dataset.cost = cow.cost;
+    btn.innerHTML = '<span class="emoji">' + cow.emoji + '</span>' +
+        '<span class="name">' + cow.name + '</span>' +
+        '<span class="cost">' + cow.cost + ' 🥛</span>' +
+        '<span class="desc">' + cow.desc + '</span>';
+
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cow-card').forEach(c => c.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedCowType = cow.id;
     });
+    shopBar.appendChild(btn);
 });
 
-restartBtn.addEventListener('click', resetGame);
+restartBtn.addEventListener('click', restartCurrentBiome);
+
 canvas.addEventListener('click', (e) => {
     if (gameOver) return;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const col = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+    const row = Math.floor((e.clientY - rect.top) / CELL_SIZE);
 
-    const col = Math.floor(x / CELL_SIZE);
-    const row = Math.floor(y / CELL_SIZE);
-
+    if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
     if (cows.some(c => c.col === col && c.row === row)) return;
 
-    const blueprint = COW_TYPES[selectedCowType];
+    const blueprint = COW_MAP[selectedCowType];
     if (milk >= blueprint.cost) {
         milk -= blueprint.cost;
         cows.push({
@@ -74,14 +109,15 @@ canvas.addEventListener('click', (e) => {
             y: row * CELL_SIZE + CELL_SIZE / 2,
             hp: blueprint.hp,
             maxHp: blueprint.hp,
-            timer: 0
+            timer: 0,
+            frozenTimer: 0
         });
         updateHUD();
     }
 });
 
-function startWave(waveNum) {
-    aliensToSpawn = 4 + waveNum * 2;
+function startWave() {
+    aliensToSpawn = 5 + (biomeIndex * 3) + (waveInBiome * 2);
     spawnTimer = 60;
 }
 
@@ -89,18 +125,24 @@ function spawnAlien() {
     const row = Math.floor(Math.random() * ROWS);
     let typeKey = 'grunt';
 
-    if (aliensToSpawn === 1 && wave % 5 === 0) {
-        typeKey = 'warlordBoss';
-    } else if (aliensToSpawn === 1 && wave % 3 === 0) {
-        typeKey = 'mothershipBoss';
+    // Spawn Biome Boss at the end of Wave 3 in each biome
+    if (waveInBiome === 3 && aliensToSpawn === 1) {
+        typeKey = BIOMES[biomeIndex].boss;
     } else {
         const rand = Math.random();
-        if (wave >= 2 && rand > 0.7) typeKey = 'runner';
-        if (wave >= 3 && rand > 0.85) typeKey = 'brute';
+        if (biomeIndex === 0 && waveInBiome === 1) {
+            typeKey = rand > 0.75 ? 'runner' : 'grunt';
+        } else {
+            if (rand > 0.86) typeKey = 'ghost';
+            else if (rand > 0.72) typeKey = 'charger';
+            else if (rand > 0.56) typeKey = 'blaster';
+            else if (rand > 0.40) typeKey = 'brute';
+            else if (rand > 0.22) typeKey = 'runner';
+        }
     }
 
     const template = ALIEN_TYPES[typeKey];
-    const hpScale = 1 + (wave - 1) * 0.15;
+    const hpScale = 1 + (biomeIndex * 0.35) + ((waveInBiome - 1) * 0.12);
 
     aliens.push(Object.assign({}, template, {
         typeKey: typeKey,
@@ -109,7 +151,10 @@ function spawnAlien() {
         y: row * CELL_SIZE + CELL_SIZE / 2,
         hp: Math.round(template.hp * hpScale),
         maxHp: Math.round(template.hp * hpScale),
-        abilityTimer: 0
+        abilityTimer: 0,
+        slowTimer: 0,
+        poisonTimer: 0,
+        charged: false
     }));
 }
 
@@ -119,228 +164,15 @@ function addFloatingText(text, x, y, color = '#ffd166') {
 
 function updateHUD() {
     milkEl.textContent = milk;
-    waveEl.textContent = wave;
+    biomeEl.textContent = BIOMES[biomeIndex].name;
+    waveEl.textContent = waveInBiome;
     barnHpEl.textContent = barnHp;
 
-    shopCards.forEach(card => {
+    document.querySelectorAll('.cow-card').forEach(card => {
         const cost = Number(card.dataset.cost);
         card.classList.toggle('disabled', milk < cost);
     });
 }
-function update() {
-    if (gameOver) return;
-    frame++;
-
-    if (frame % 300 === 0) {
-        milk += 25;
-        addFloatingText('+25 🥛', 80, 40);
-        updateHUD();
-    }
-
-    if (aliensToSpawn > 0) {
-        spawnTimer--;
-        if (spawnTimer <= 0) {
-            spawnAlien();
-            aliensToSpawn--;
-            spawnTimer = Math.max(45, 130 - wave * 8);
-        }
-    } else if (aliens.length === 0) {
-        waveCooldown--;
-        if (waveCooldown <= 0) {
-            wave++;
-            waveCooldown = 180;
-            startWave(wave);
-            updateHUD();
-        }
-    }
-
-    cows.forEach(cow => {
-        const stats = COW_TYPES[cow.type];
-        cow.timer++;
-
-        if (cow.type === 'dairy' && cow.timer >= stats.rate) {
-            milk += 25;
-            cow.timer = 0;
-            addFloatingText('+25 🥛', cow.x, cow.y - 20);
-            updateHUD();
-        } else if ((cow.type === 'milkLauncher' || cow.type === 'plasmaCow') && cow.timer >= stats.rate) {
-            const alienInRow = aliens.some(a => a.row === cow.row && a.x > cow.x);
-            if (alienInRow) {
-                projectiles.push({
-                    x: cow.x + 25,
-                    y: cow.y,
-                    row: cow.row,
-                    dmg: stats.dmg,
-                    speed: stats.speed,
-                    color: stats.color
-                });
-                cow.timer = 0;
-            }
-        }
-    });
-
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-        const p = projectiles[i];
-        p.x += p.speed;
-
-        if (p.x > canvas.width) {
-            projectiles.splice(i, 1);
-            continue;
-        }
-
-        for (let j = aliens.length - 1; j >= 0; j--) {
-            const a = aliens[j];
-            if (a.row === p.row && Math.abs(p.x - a.x) < 25) {
-                a.hp -= p.dmg;
-                projectiles.splice(i, 1);
-
-                if (a.hp <= 0) {
-                    milk += a.reward;
-                    addFloatingText('+' + a.reward + ' 🥛', a.x, a.y - 20);
-                    aliens.splice(j, 1);
-                    updateHUD();
-                }
-                break;
-            }
-        }
-    }
-
-    for (let i = aliens.length - 1; i >= 0; i--) {
-        const a = aliens[i];
-        let blocked = false;
-
-        if (a.isBoss) {
-            a.abilityTimer++;
-            if (a.bossType === 'spawner' && a.abilityTimer >= 360) {
-                a.abilityTimer = 0;
-                const spawnRow = Math.floor(Math.random() * ROWS);
-                aliens.push(Object.assign({}, ALIEN_TYPES.grunt, {
-                    typeKey: 'grunt',
-                    row: spawnRow,
-                    x: a.x - 20,
-                    y: spawnRow * CELL_SIZE + CELL_SIZE / 2,
-                    maxHp: 100
-                }));
-                addFloatingText('Reinforcements!', a.x, a.y - 40, '#ff595e');
-            } else if (a.bossType === 'teleporter' && a.abilityTimer >= 280) {
-                a.abilityTimer = 0;
-                a.x = Math.max(120, a.x - 110);
-                a.row = Math.floor(Math.random() * ROWS);
-                a.y = a.row * CELL_SIZE + CELL_SIZE / 2;
-                addFloatingText('WARP!', a.x, a.y - 30, '#c77dff');
-            }
-        }
-
-        for (let j = cows.length - 1; j >= 0; j--) {
-            const c = cows[j];
-            if (c.row === a.row && Math.abs(a.x - c.x) < 40) {
-                blocked = true;
-                c.hp -= a.dmg;
-                if (c.hp <= 0) {
-                    cows.splice(j, 1);
-                }
-                break;
-            }
-        }
-
-        if (!blocked) {
-            a.x -= a.speed;
-        }
-
-        if (a.x < 10) {
-            barnHp -= a.isBoss ? 3 : 1;
-            aliens.splice(i, 1);
-            updateHUD();
-
-            if (barnHp <= 0) {
-                gameOver = true;
-                overlay.classList.remove('hidden');
-            }
-        }
-    }
-
-    for (let i = floatingTexts.length - 1; i >= 0; i--) {
-        floatingTexts[i].y -= 0.7;
-        floatingTexts[i].life--;
-        if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
-    }
-}
-function drawGrid() {
-    for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-            ctx.fillStyle = (r + c) % 2 === 0 ? '#52b788' : '#40916c';
-            ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
-    }
-}
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    cows.forEach(c => {
-        ctx.font = '44px Arial';
-        ctx.fillText(COW_TYPES[c.type].emoji, c.x, c.y);
-
-        const hpPct = c.hp / c.maxHp;
-        ctx.fillStyle = '#222';
-        ctx.fillRect(c.x - 25, c.y + 30, 50, 6);
-        ctx.fillStyle = '#06d6a0';
-        ctx.fillRect(c.x - 25, c.y + 30, 50 * hpPct, 6);
-    });
-
-    projectiles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
-        ctx.fill();
-    });
-
-    aliens.forEach(a => {
-        ctx.font = a.size + 'px Arial';
-        ctx.fillText(a.emoji, a.x, a.y);
-
-        const barWidth = a.isBoss ? 70 : 44;
-        const hpPct = Math.max(0, a.hp / a.maxHp);
-        ctx.fillStyle = '#222';
-        ctx.fillRect(a.x - barWidth / 2, a.y - a.size / 2 - 12, barWidth, 7);
-        ctx.fillStyle = a.isBoss ? '#ffbe0b' : '#ef476f';
-        ctx.fillRect(a.x - barWidth / 2, a.y - a.size / 2 - 12, barWidth * hpPct, 7);
-    });
-
-    floatingTexts.forEach(ft => {
-        ctx.font = 'bold 16px Arial';
-        ctx.fillStyle = ft.color;
-        ctx.fillText(ft.text, ft.x, ft.y);
-    });
-}
-
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-function resetGame() {
-    milk = 100;
-    wave = 1;
-    barnHp = 5;
-    cows = new Array();
-    aliens = new Array();
-    projectiles = new Array();
-    floatingTexts = new Array();
-    gameOver = false;
-    overlay.classList.add('hidden');
-    updateHUD();
-    startWave(1);
-}
-
-updateHUD();
-startWave(1);
-gameLoop();
 function update() {
     if (gameOver) return;
     frame++;
