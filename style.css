@@ -1,333 +1,128 @@
-
-/* =====================================
-   COWS VS ALIENS - MEGA HERD EDITION
-   PART 2: COMPLETE STYLESHEET
-===================================== */
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-html {
-    scroll-behavior: smooth;
 }
 
 body {
-    background-color: #0d0d18;
+    background-color: #121220;
+    background-color: #10101c;
     color: #fff;
-    min-height: 100vh;
-    padding: 14px;
-    overflow-x: hidden;
-}
-
-/* GAME CONTAINER */
-
-#game-container {
+    display: flex;
+    justify-content: center;
+@@ -18,32 +18,38 @@ body {
     background-color: #1b263b;
-    padding: 14px;
+    padding: 16px;
     border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-    width: 100%;
-    max-width: 1634px;
-    margin: 0 auto;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+    width: 936px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
+    width: 1136px;
 }
-
-/* HEADER / HUD */
 
 #hud {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
     background-color: #0d1b2a;
-    padding: 12px 16px;
+    padding: 10px 20px;
+    padding: 10px 18px;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    font-size: 1.05rem;
     font-size: 1rem;
     font-weight: bold;
     border: 1px solid #415a77;
 }
 
-.stat-box {
-    padding: 5px;
-    white-space: nowrap;
-}
-
 #hud .hint {
     color: #ffd166;
-    font-size: 0.9rem;
-}
-
-/* SHOP SECTION */
-
-#shop-section h2 {
-    color: #ffd166;
-    font-size: 1.2rem;
-    margin: 12px 0;
-    text-align: center;
+    font-size: 0.88rem;
 }
 
 #shop-bar {
     display: flex;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     overflow-x: auto;
-    overflow-y: hidden;
-    padding: 5px 4px 12px;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    padding-bottom: 8px;
 }
 
 #shop-bar::-webkit-scrollbar {
-    height: 10px;
-}
-
-#shop-bar::-webkit-scrollbar-track {
-    background: #0d1b2a;
-    border-radius: 5px;
+    height: 8px;
+    height: 9px;
 }
 
 #shop-bar::-webkit-scrollbar-thumb {
-    background: #415a77;
-    border-radius: 5px;
+@@ -52,11 +58,11 @@ body {
 }
-
-#shop-bar::-webkit-scrollbar-thumb:hover {
-    background: #778da9;
-}
-
-/* COW CARDS */
 
 .cow-card {
-    min-width: 118px;
-    max-width: 145px;
-    min-height: 112px;
-    flex-shrink: 0;
-
+    min-width: 112px;
+    min-width: 116px;
     background-color: #24344d;
     border: 2px solid #415a77;
     border-radius: 8px;
-    padding: 8px 5px;
-
+    padding: 8px 6px;
+    padding: 7px 6px;
     color: white;
     cursor: pointer;
-
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-
-    transition: transform 0.1s, border-color 0.2s,
-                background-color 0.2s;
-}
-
-.cow-card:hover {
-    transform: translateY(-2px);
-    border-color: #778da9;
-}
-
+@@ -74,40 +80,40 @@ body {
 .cow-card.selected {
     border-color: #ffd166;
     background-color: #2e4568;
+    box-shadow: 0 0 10px rgba(255, 209, 102, 0.4);
     box-shadow: 0 0 10px rgba(255, 209, 102, 0.45);
 }
 
 .cow-card.disabled {
+    opacity: 0.45;
     opacity: 0.42;
     cursor: not-allowed;
 }
 
 .cow-card .emoji {
-    font-size: 1.55rem;
+    font-size: 1.7rem;
+    font-size: 1.65rem;
 }
 
 .cow-card .name {
     font-weight: bold;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
+    font-size: 0.8rem;
     margin-top: 2px;
 }
 
 .cow-card .cost {
     color: #ffd166;
     font-weight: bold;
-    font-size: 0.76rem;
+    font-size: 0.8rem;
+    font-size: 0.78rem;
 }
 
 .cow-card .desc {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
+    font-size: 0.67rem;
     color: #b8c4d9;
     margin-top: 2px;
-    line-height: 1.2;
+    line-height: 1.1;
 }
-
-/* GAME BOARD */
 
 #canvas-wrapper {
     position: relative;
-    width: 100%;
-    max-width: 1600px;
-    margin: 0 auto;
-
-    aspect-ratio: 16 / 5;
-
+    width: 900px;
+    width: 1100px;
+    height: 500px;
     border-radius: 8px;
     overflow: hidden;
-    border: 3px solid #415a77;
-
-    background-color: #52b788;
-}
-
-#gameCanvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    cursor: crosshair;
-    touch-action: manipulation;
-}
-
-/* GAME OVER OVERLAY */
-
+@@ -121,7 +127,7 @@ canvas {
 #overlay {
     position: absolute;
     inset: 0;
-
+    background: rgba(13, 27, 42, 0.9);
     background: rgba(13, 27, 42, 0.92);
-
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    gap: 14px;
-
-    z-index: 10;
-    text-align: center;
-    padding: 20px;
-}
-
-#overlay.hidden {
-    display: none;
-}
-
-#overlay h1 {
-    color: #ff595e;
-    font-size: clamp(1.8rem, 5vw, 3rem);
-}
-
-#overlay p {
-    color: #ffffff;
-    font-size: 1.1rem;
-}
-
-/* RESTART BUTTON */
-
-#restart-btn {
-    padding: 12px 26px;
-    font-size: 1.05rem;
-    font-weight: bold;
-
-    background-color: #ffd166;
-    color: #0d1b2a;
-
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-
-    transition: background-color 0.2s, transform 0.2s;
-}
-
+@@ -147,4 +153,3 @@ canvas {
 #restart-btn:hover {
     background-color: #fcbf49;
-    transform: scale(1.04);
-}
-
-#restart-btn:active {
-    transform: scale(0.97);
-}
-
-/* FOOTER */
-
-footer {
-    text-align: center;
-    color: #b8c4d9;
-    font-size: 0.85rem;
-    padding: 15px 5px 5px;
-    line-height: 1.7;
-}
-
-/* MOBILE SUPPORT */
-
-@media (max-width: 768px) {
-
-    body {
-        padding: 5px;
-    }
-
-    #game-container {
-        padding: 8px;
-    }
-
-    #hud {
-        justify-content: center;
-        gap: 6px;
-        padding: 10px 5px;
-        font-size: 0.8rem;
-    }
-
-    .stat-box {
-        white-space: normal;
-        text-align: center;
-    }
-
-    #hud .hint {
-        width: 100%;
-        font-size: 0.75rem;
-    }
-
-    #shop-section h2 {
-        font-size: 1rem;
-    }
-
-    .cow-card {
-        min-width: 105px;
-        min-height: 105px;
-    }
-
-    #canvas-wrapper {
-        aspect-ratio: 16 / 5;
-        border-width: 2px;
-    }
-
-    #restart-btn {
-        font-size: 0.95rem;
-    }
-}
-
-/* SMALL PHONES */
-
-@media (max-width: 420px) {
-
-    #hud {
-        font-size: 0.72rem;
-    }
-
-    .cow-card {
-        min-width: 95px;
-    }
-
-    .cow-card .name {
-        font-size: 0.7rem;
-    }
-
-    .cow-card .desc {
-        font-size: 0.6rem;
-    }
-
-    footer {
-        font-size: 0.72rem;
-    }
 }
