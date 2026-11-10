@@ -1,34 +1,104 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="theme-color" content="#172b22">
+    <meta name="description" content="Defend your barn against alien invasions with an enormous cow army!">
+
     <title>Cows vs. Aliens: Mega Herd Edition</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
     <div id="game-container">
+
+        <!-- GAME HUD -->
         <header id="hud">
-            <div class="stat-box">🥛 Milk: <span id="milk-count">150</span></div>
-            <div class="stat-box">🌍 Biome: <span id="biome-name">Green Pasture</span></div>
-            <div class="stat-box">🌊 Wave: <span id="wave-count">1</span>/<span id="max-waves">3</span></div>
-            <div class="stat-box">❤️ Barn HP: <span id="barn-hp">15</span></div>
-            <div class="stat-box">🐄 Herd Roster: 105 Cows</div>
-            <div class="stat-box hint">🪏 Hover Cow + Press [S] to Refund 50%</div>
+
+            <div class="stat-box">
+                🥛 Milk:
+                <span id="milk-count">150</span>
+            </div>
+
+            <div class="stat-box">
+                🌍 Biome:
+                <span id="biome-name">Green Pasture</span>
+            </div>
+
+            <div class="stat-box">
+                🌊 Wave:
+                <span id="wave-count">1</span> /
+                <span id="max-waves">3</span>
+            </div>
+
+            <div class="stat-box">
+                ❤️ Barn HP:
+                <span id="barn-hp">15</span>
+            </div>
+
+            <div class="stat-box">
+                🐄 Herd Roster:
+                <span id="cow-count">105</span> Cows
+            </div>
+
+            <div class="stat-box hint">
+                🪏 Hover Cow + Press [S] to Refund 50%
+            </div>
+
         </header>
 
-        <div id="shop-bar"></div>
+        <!-- COW SHOP -->
+        <section id="shop-section">
 
-        <div id="canvas-wrapper">
-            <canvas id="gameCanvas" width="1600" height="500"></canvas>
+            <h2>🐄 Choose Your Herd!</h2>
+
+            <div id="shop-bar"></div>
+
+        </section>
+
+        <!-- GAME BOARD -->
+        <main id="canvas-wrapper">
+
+            <canvas
+                id="gameCanvas"
+                width="1600"
+                height="500"
+                aria-label="Cow versus aliens game board">
+            </canvas>
+
+            <!-- GAME OVER SCREEN -->
             <div id="overlay" class="hidden">
-                <h1 id="overlay-title">Biome Overrun!</h1>
-                <p id="overlay-sub">The aliens breached your barn!</p>
-                <button id="restart-btn">Retry Current Biome</button>
+
+                <h1 id="overlay-title">
+                    Biome Overrun!
+                </h1>
+
+                <p id="overlay-sub">
+                    The aliens breached your barn!
+                </p>
+
+                <button id="restart-btn">
+                    Retry Current Biome
+                </button>
+
             </div>
-        </div>
+
+        </main>
+
+        <footer>
+            <p>🐄 Cows vs. Aliens: Mega Herd Edition 👽</p>
+            <p>Defend your barn. Survive every wave. Conquer every biome!</p>
+        </footer>
+
     </div>
 
-    <script src="script.js"></script>
+    <!-- GAME JAVASCRIPT -->
+    <script src="script.js" defer></script>
+
 </body>
 </html>
