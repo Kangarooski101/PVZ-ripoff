@@ -1,3 +1,8 @@
++23
+-18
+Lines changed: 23 additions & 18 deletions
+Original file line number	Diff line number	Diff line change
+@@ -6,7 +6,7 @@
 }
 
 body {
@@ -35,7 +40,6 @@ body {
     color: #ffd166;
     font-size: 0.88rem;
 }
-
 #shop-bar {
     display: flex;
     gap: 8px;
