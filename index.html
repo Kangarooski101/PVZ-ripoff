@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>👽 ALIEN FRONTIER 3D</title>
+  <title>👽 ALIEN FRONTIER 3D — EVOLVED</title>
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
       margin: 0;
       overflow: hidden;
-      background: #0a0e1a;
+      background: #060913;
       color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      cursor: crosshair;
     }
     canvas {
       display: block;
@@ -20,84 +21,148 @@
     }
     #hud {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      background: rgba(14, 22, 38, 0.88);
-      border: 2px solid #55ffcf;
-      border-radius: 10px;
-      padding: 12px 16px;
+      top: 16px;
+      left: 16px;
+      background: linear-gradient(135deg, rgba(14, 23, 42, 0.92), rgba(22, 34, 62, 0.85));
+      backdrop-filter: blur(8px);
+      border: 2px solid #38bdf8;
+      border-radius: 14px;
+      padding: 14px 18px;
       pointer-events: none;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.25);
+      min-width: 280px;
     }
     #hud h1 {
-      margin: 0 0 6px 0;
-      font-size: 19px;
+      margin: 0 0 8px 0;
+      font-size: 18px;
       color: #55ffcf;
       letter-spacing: 2px;
+      text-shadow: 0 0 8px rgba(85, 255, 207, 0.5);
     }
-    .stat { font-size: 14px; margin: 4px 0; font-weight: bold; }
-    #status { color: #ffe38c; font-size: 13px; margin-top: 6px; }
+    .hp-wrap {
+      width: 100%;
+      height: 14px;
+      background: #0f172a;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid #334155;
+      margin: 6px 0 10px 0;
+    }
+    #hp-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ef4444, #22c55e);
+      transition: width 0.2s;
+    }
+    .stat-line {
+      font-size: 13px;
+      margin: 4px 0;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+    .res-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .res-pill {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 4px 6px;
+      font-size: 12px;
+      text-align: center;
+      font-weight: bold;
+    }
+    #status {
+      color: #fde047;
+      font-size: 13px;
+      margin-top: 9px;
+      font-weight: 600;
+    }
     #controls {
       position: absolute;
-      bottom: 14px;
-      left: 14px;
-      background: rgba(14, 22, 38, 0.88);
-      border: 1px solid #55ffcf;
-      border-radius: 8px;
-      padding: 8px 12px;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(14, 23, 42, 0.88);
+      border: 1px solid #38bdf8;
+      border-radius: 10px;
+      padding: 9px 14px;
       font-size: 12px;
-      color: #b8f2e6;
+      color: #bae6fd;
       pointer-events: none;
     }
     #actions {
       position: absolute;
-      bottom: 14px;
-      right: 14px;
+      bottom: 16px;
+      right: 16px;
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
     button {
-      background: #17685e;
+      background: linear-gradient(180deg, #0f766e, #115e59);
       color: white;
-      border: 2px solid #55ffcf;
-      border-radius: 8px;
-      padding: 9px 14px;
+      border: 1.5px solid #5eead4;
+      border-radius: 10px;
+      padding: 10px 15px;
       font-size: 13px;
       font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: transform 0.12s, background 0.15s;
     }
-    button:hover:not(:disabled) { background: #219c86; }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button:hover:not(:disabled) {
+      background: linear-gradient(180deg, #14b8a6, #0f766e);
+      transform: translateY(-2px);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
     #shop-modal, #end-modal {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(5, 8, 16, 0.85);
+      background: rgba(4, 7, 15, 0.88);
+      backdrop-filter: blur(6px);
       align-items: center;
       justify-content: center;
-      z-index: 20;
+      z-index: 30;
+      cursor: default;
     }
     .box {
-      background: #141e33;
-      border: 3px solid #55ffcf;
-      border-radius: 12px;
-      padding: 22px;
-      width: min(92vw, 480px);
+      background: linear-gradient(145deg, #111827, #1e293b);
+      border: 2px solid #55ffcf;
+      border-radius: 16px;
+      padding: 24px;
+      width: min(94vw, 640px);
       text-align: center;
+      box-shadow: 0 0 35px rgba(85, 255, 207, 0.3);
     }
-    .grid {
+    .shop-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 15px 0;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
     }
     .card {
-      background: #1c2945;
-      border: 1px solid #3c8c7e;
-      border-radius: 8px;
-      padding: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1.5px solid #38bdf8;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .card h4 { margin: 0 0 5px 0; color: #8dffdf; }
-    .card p { margin: 0 0 8px 0; font-size: 12px; color: #ccc; }
+    .card.weapon-card {
+      border-color: #f59e0b;
+      background: linear-gradient(180deg, rgba(45, 26, 12, 0.6), rgba(15, 23, 42, 0.95));
+    }
+    .card h4 { margin: 0 0 5px 0; color: #7dd3fc; font-size: 15px; }
+    .card.weapon-card h4 { color: #fbbf24; }
+    .card p { margin: 0 0 8px 0; font-size: 12px; color: #cbd5e1; }
+    .cost-tag { font-size: 12px; color: #fde047; margin-bottom: 8px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -105,61 +170,52 @@
 
   <div id="hud">
     <h1>👽 ALIEN FRONTIER 3D</h1>
-    <div class="stat" id="wave-info">🌊 Wave: 1 / 5</div>
-    <div class="stat" id="stats">❤️ HP: 100/100 | 🛡️ Turrets: 0</div>
-    <div class="stat" id="inventory">💎 Gems: 0 | 🪵 Wood: 5 | 💊 Medkits: 1</div>
-    <div id="status">Run with WASD, Jump with SPACE, Shoot with F!</div>
+    <div class="stat-line" id="wave-info">🌊 Wave: 1 / 5</div>
+    <div class="hp-wrap"><div id="hp-bar"></div></div>
+    <div class="stat-line" id="stats">❤️ 100/100 | 🔫 Pulse Blaster | 🛡️ Turrets: 0</div>
+    <div class="res-grid">
+      <div class="res-pill" id="res-gem">💎 0</div>
+      <div class="res-pill" id="res-wood">🪵 5</div>
+      <div class="res-pill" id="res-med">💊 1</div>
+      <div class="res-pill" id="res-tit">🪨 0</div>
+      <div class="res-pill" id="res-pla">⚡ 0</div>
+      <div class="res-pill" id="res-scr">🔩 0</div>
+    </div>
+    <div id="status">Aim with Mouse, Shoot with F or Click!</div>
   </div>
 
   <div id="controls">
-    <b>WASD / Arrows</b> = Run &nbsp;|&nbsp;
+    <b>WASD</b> = Run &nbsp;|&nbsp;
     <b>SPACE</b> = Jump &nbsp;|&nbsp;
-    <b>F</b> = Shoot &nbsp;|&nbsp;
+    <b>Mouse</b> = Aim &nbsp;|&nbsp;
+    <b>F / Click</b> = Shoot &nbsp;|&nbsp;
     <b>E</b> = Gather &nbsp;|&nbsp;
-    <b>T</b> = Wood Turret (5 Wood) &nbsp;|&nbsp;
+    <b>T</b> = Turret &nbsp;|&nbsp;
     <b>H</b> = Heal
   </div>
 
   <div id="actions">
-    <button onclick="buildTurret()">🪵 Build Turret (5 Wood)</button>
-    <button onclick="craftMedkit()">💊 Craft Medkit (3 Gems)</button>
+    <button onclick="buildTurret()">🪵 Turret (5🪵 + 2🔩)</button>
+    <button onclick="craftMedkit()">💊 Medkit (2💎 + 1⚡)</button>
     <button onclick="useMedkit()">❤️ Heal [H]</button>
   </div>
 
   <div id="shop-modal">
     <div class="box">
-      <h2 style="color:#55ffcf; margin-top:0;">🛒 WAVE CLEARED — UPGRADE SHOP</h2>
-      <p id="shop-gems" style="color:#8dffdf; font-weight:bold;">Available Gems: 0 💎</p>
-      <div class="grid">
-        <div class="card">
-          <h4>🔫 Blaster Power</h4>
-          <p id="dmg-txt">Lvl 1 (Damage: 25)</p>
-          <button id="btn-dmg" onclick="buyUpgrade('damage')">Upgrade (3 💎)</button>
-        </div>
-        <div class="card">
-          <h4>⚡ Sprint Boots</h4>
-          <p id="spd-txt">Lvl 1 (Speed: 16)</p>
-          <button id="btn-spd" onclick="buyUpgrade('speed')">Upgrade (3 💎)</button>
-        </div>
-        <div class="card">
-          <h4>❤️ Exo-Armor HP</h4>
-          <p id="hp-txt">Lvl 1 (Max HP: 100)</p>
-          <button id="btn-hp" onclick="buyUpgrade('maxHp')">Upgrade (3 💎)</button>
-        </div>
-        <div class="card">
-          <h4>🚀 Jump Boost</h4>
-          <p id="jmp-txt">Lvl 1 (Jump: 16)</p>
-          <button id="btn-jmp" onclick="buyUpgrade('jump')">Upgrade (3 💎)</button>
-        </div>
+      <h2 style="color:#55ffcf; margin:0 0 6px 0;">🛒 XENORA ARMORY & UPGRADE FORGE</h2>
+      <div id="shop-inv" style="font-size:13px; color:#93c5fd; font-weight:bold;"></div>
+      <div class="shop-grid" id="shop-cards"></div>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button id="reroll-btn" style="background:#7c3aed; border-color:#c4b5fd;" onclick="rerollShop()">🎲 Reroll Shop (2 💎)</button>
+        <button style="background:#059669; border-color:#6ee7b7; flex:1;" onclick="nextWave()">▶ DEPLOY TO NEXT WAVE</button>
       </div>
-      <button style="width:100%; background:#219c86; font-size:15px;" onclick="nextWave()">▶ START NEXT WAVE</button>
     </div>
   </div>
 
   <div id="end-modal">
     <div class="box">
       <h2 id="end-title" style="color:#55ffcf;">💀 GAME OVER</h2>
-      <p id="end-desc">The aliens overwhelmed XENORA-7.</p>
+      <p id="end-desc" style="color:#e2e8f0;"></p>
       <button onclick="location.reload()">🔄 Play Again</button>
     </div>
   </div>
@@ -174,23 +230,19 @@
   window.addEventListener("resize", resize);
   resize();
 
-  // Built-in 3D Perspective Camera Projector (Zero external libraries needed!)
-  const cam = { x: 0, y: 18, z: 24, fov: 520 };
+  const cam = { x: 0, y: 19, z: 25, fov: 530, shake: 0 };
+  const pitch = 0.58;
+  const cosP = Math.cos(pitch);
+  const sinP = Math.sin(pitch);
 
+  // Project 3D world point to 2D screen coordinates
   function project3D(wx, wy, wz) {
     const dx = wx - cam.x;
     const dy = wy - cam.y;
     const dz = wz - cam.z;
-
-    // Camera pitch angle (looking down at 34 degrees)
-    const pitch = 0.58;
-    const cosP = Math.cos(pitch);
-    const sinP = Math.sin(pitch);
-
     const ry = dy * cosP - dz * sinP;
     const rz = dy * sinP + dz * cosP;
-
-    if (rz >= -0.5) return null; // Behind camera
+    if (rz >= -0.5) return null;
     const scale = cam.fov / -rz;
     return {
       x: canvas.width * 0.5 + dx * scale,
@@ -199,6 +251,40 @@
       depth: -rz
     };
   }
+
+  // Convert 2D mouse screen position onto the 3D ground plane (y = 0)
+  const mouse = { sx: canvas.width / 2, sy: canvas.height / 2, wx: 0, wz: 0, down: false };
+
+  function updateMouseWorld() {
+    const nx = (mouse.sx - canvas.width * 0.5) / cam.fov;
+    const ny = (canvas.height * 0.5 - mouse.sy) / cam.fov;
+    // Ray direction in world space
+    const dirY = ny * cosP - sinP;
+    const dirZ = ny * sinP + cosP;
+    if (Math.abs(dirY) > 0.001) {
+      const t = -cam.y / dirY;
+      if (t > 0) {
+        mouse.wx = cam.x + nx * t;
+        mouse.wz = cam.z + dirZ * t;
+      }
+    }
+  }
+
+  // Animated background stars
+  const stars = Array.from({ length: 90 }, () => ({
+    x: Math.random() * 2000,
+    y: Math.random() * 600,
+    r: Math.random() * 1.8 + 0.5,
+    twinkle: Math.random() * Math.PI * 2
+  }));
+  const weaponsList = [
+    { id: "blaster", name: "🔫 Pulse Blaster", dmgMult: 1.0, rate: 0.28, count: 1, spread: 0, speed: 52, color: "#55ffcf", desc: "Reliable rapid energy bolts." },
+    { id: "shotgun", name: "💥 Tri-Spread Cannon", dmgMult: 0.75, rate: 0.52, count: 3, spread: 0.24, speed: 46, color: "#fb923c", desc: "Fires 3 wide plasma blasts." },
+    { id: "railgun", name: "⚡ Hyper Railgun", dmgMult: 2.3, rate: 0.65, count: 1, spread: 0, speed: 78, color: "#38bdf8", desc: "High-velocity piercing beam." },
+    { id: "minigun", name: "🔥 Starfire Gatling", dmgMult: 0.65, rate: 0.13, count: 1, spread: 0.12, speed: 56, color: "#f43f5e", desc: "Blazing fast automatic fire." },
+    { id: "nova", name: "🌟 Nova Starburst", dmgMult: 0.85, rate: 0.58, count: 5, spread: 0.42, speed: 44, color: "#e879f9", desc: "5-way cosmic energy fan." }
+  ];
+
   const player = {
     x: 0, y: 0, z: 0,
     vy: 0,
@@ -208,25 +294,28 @@
     maxHp: 100,
     speed: 16,
     jump: 16,
-    damage: 25,
-    gems: 0,
+    baseDamage: 24,
+    weapon: weaponsList[0],
+    fireTimer: 0,
+    gems: 2,
     wood: 5,
+    titanium: 0,
+    plasma: 0,
+    scrap: 2,
     medkits: 1
   };
 
-  const upgrades = { damage: 1, speed: 1, maxHp: 1, jump: 1 };
-  const costs = { damage: 3, speed: 3, maxHp: 3, jump: 3 };
-
   let wave = 1;
-  const maxNormalWaves = 4; // Wave 5 is Cold Emoji Boss!
+  const maxNormalWaves = 4; // Wave 5 is Cold Boss 🥶
   let enemies = [];
   let resources = [];
   let lasers = [];
   let turrets = [];
+  let particles = [];
+  let floatTexts = [];
   let isPaused = false;
   let gameEnded = false;
   const keys = {};
-
   function say(msg) {
     document.getElementById("status").textContent = msg;
   }
@@ -234,162 +323,262 @@
   function updateHUD() {
     document.getElementById("wave-info").textContent =
       wave > maxNormalWaves ? "❄️ BOSS WAVE: COLD GUY 🥶" : `🌊 Wave: ${wave} / 5`;
+    document.getElementById("hp-bar").style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
     document.getElementById("stats").textContent =
-      `❤️ HP: ${Math.ceil(player.hp)}/${player.maxHp} | 🛡️ Wood Turrets: ${turrets.length}`;
-    document.getElementById("inventory").textContent =
-      `💎 Gems: ${player.gems} | 🪵 Wood: ${player.wood} | 💊 Medkits: ${player.medkits}`;
+      `❤️ ${Math.ceil(player.hp)}/${player.maxHp} | ${player.weapon.name} | 🛡️ ${turrets.length}`;
+
+    document.getElementById("res-gem").textContent = `💎 ${player.gems}`;
+    document.getElementById("res-wood").textContent = `🪵 ${player.wood}`;
+    document.getElementById("res-med").textContent = `💊 ${player.medkits}`;
+    document.getElementById("res-tit").textContent = `🪨 ${player.titanium}`;
+    document.getElementById("res-pla").textContent = `⚡ ${player.plasma}`;
+    document.getElementById("res-scr").textContent = `🔩 ${player.scrap}`;
   }
-  function spawnResource(type) {
+
+  function spawnParticles(x, y, z, color, count = 10) {
+    for (let i = 0; i < count; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const spd = Math.random() * 10 + 3;
+      particles.push({
+        x, y: y + 1, z,
+        vx: Math.cos(ang) * spd,
+        vy: Math.random() * 9 + 3,
+        vz: Math.sin(ang) * spd,
+        color,
+        life: 0.45 + Math.random() * 0.25
+      });
+    }
+  }
+
+  function spawnFloatText(x, y, z, text, color = "#fff") {
+    floatTexts.push({ x, y: y + 2, z, text, color, life: 0.9 });
+  }
+  const resourceTypes = [
+    { type: "wood", icon: "🪵", name: "Alien Wood" },
+    { type: "gem", icon: "💎", name: "Xenon Gem" },
+    { type: "titanium", icon: "🪨", name: "Titanium Ore" },
+    { type: "plasma", icon: "⚡", name: "Plasma Cell" },
+    { type: "scrap", icon: "🔩", name: "Alien Scrap" }
+  ];
+
+  function spawnResource(forcedType = null) {
+    const pick = forcedType
+      ? resourceTypes.find(r => r.type === forcedType)
+      : resourceTypes[Math.floor(Math.random() * resourceTypes.length)];
     resources.push({
-      x: (Math.random() - 0.5) * 90,
+      x: (Math.random() - 0.5) * 92,
       y: 0,
-      z: (Math.random() - 0.5) * 90,
-      type: type
+      z: (Math.random() - 0.5) * 92,
+      type: pick.type,
+      icon: pick.icon,
+      name: pick.name,
+      bob: Math.random() * Math.PI * 2
     });
   }
 
-  for (let i = 0; i < 14; i++) spawnResource("wood");
-  for (let i = 0; i < 10; i++) spawnResource("gem");
+  for (let i = 0; i < 24; i++) spawnResource();
 
   function spawnWave(waveNum) {
     if (waveNum <= maxNormalWaves) {
-      const count = 4 + waveNum * 2;
-      const hp = 40 + (waveNum - 1) * 30;
-      const speed = 5.5 + (waveNum - 1) * 1.6;
+      const count = 5 + waveNum * 2;
+      const hp = 45 + (waveNum - 1) * 35;
+      const speed = 5.8 + (waveNum - 1) * 1.6;
       const dmg = 12 + (waveNum - 1) * 6;
 
       for (let i = 0; i < count; i++) {
         const ang = (Math.PI * 2 * i) / count;
-        const rad = 32 + Math.random() * 14;
+        const rad = 34 + Math.random() * 14;
         enemies.push({
           x: Math.cos(ang) * rad,
           y: 0,
           z: Math.sin(ang) * rad,
-          hp: hp,
-          maxHp: hp,
-          speed: speed,
-          dmg: dmg,
-          isBoss: false
+          hp, maxHp: hp, speed, dmg,
+          isBoss: false,
+          wobble: Math.random() * 6
         });
       }
-      say(`Wave ${waveNum} started! Aliens are faster and stronger!`);
+      say(`Wave ${waveNum}: ${count} Aliens approaching! Aim with Mouse!`);
     } else {
       enemies.push({
-        x: 0,
-        y: 0,
-        z: -38,
-        hp: 650,
-        maxHp: 650,
-        speed: 8.5,
-        dmg: 28,
-        isBoss: true
+        x: 0, y: 0, z: -40,
+        hp: 750, maxHp: 750, speed: 8.8, dmg: 30,
+        isBoss: true, wobble: 0
       });
+      cam.shake = 0.5;
       say("🥶 BOSS ALERT: THE GIANT COLD GUY HAS ARRIVED!");
     }
     updateHUD();
   }
   function shootLaser(x, y, z, vx, vz, dmg, color) {
-    lasers.push({ x, y, z, vx, vz, dmg, color, life: 1.4 });
+    lasers.push({ x, y, z, vx, vz, dmg, color, life: 1.3 });
   }
 
   function playerShoot() {
-    if (isPaused || gameEnded) return;
-    const vx = Math.sin(player.facing) * 48;
-    const vz = Math.cos(player.facing) * 48;
-    shootLaser(player.x, player.y + 1.4, player.z, vx, vz, player.damage, "#55ffcf");
+    if (isPaused || gameEnded || player.fireTimer > 0) return;
+    updateMouseWorld();
+
+    const baseAng = Math.atan2(mouse.wx - player.x, mouse.wz - player.z);
+    player.facing = baseAng;
+    const w = player.weapon;
+    player.fireTimer = w.rate;
+
+    for (let i = 0; i < w.count; i++) {
+      const offset = w.count === 1 ? 0 : (i - (w.count - 1) / 2) * w.spread;
+      const ang = baseAng + offset;
+      shootLaser(
+        player.x,
+        player.y + 1.4,
+        player.z,
+        Math.sin(ang) * w.speed,
+        Math.cos(ang) * w.speed,
+        Math.round(player.baseDamage * w.dmgMult),
+        w.color
+      );
+    }
+    cam.shake = Math.max(cam.shake, 0.08);
   }
 
   function buildTurret() {
     if (isPaused || gameEnded) return;
-    if (player.wood < 5) {
-      say("Need 5 Wood 🪵 to build an Auto-Turret!");
+    if (player.wood < 5 || player.scrap < 2) {
+      say("Need 5 Wood 🪵 + 2 Scrap 🔩 to build a Turret!");
       return;
     }
     player.wood -= 5;
+    player.scrap -= 2;
     turrets.push({ x: player.x, y: 0, z: player.z, cooldown: 0 });
-    say("🪵 Wood Auto-Turret built! It blasts nearby aliens!");
+    spawnParticles(player.x, 0, player.z, "#facc15", 12);
+    say("🛡️ Auto-Turret deployed!");
     updateHUD();
   }
 
   function gatherResource() {
     for (let i = resources.length - 1; i >= 0; i--) {
       const r = resources[i];
-      if (Math.hypot(player.x - r.x, player.z - r.z) < 4.5) {
-        if (r.type === "gem") {
-          player.gems += 2;
-          say("💎 +2 Gems collected!");
-        } else {
-          player.wood += 3;
-          say("🪵 +3 Alien Wood collected!");
-        }
+      if (Math.hypot(player.x - r.x, player.z - r.z) < 4.8) {
+        const amt = r.type === "wood" ? 3 : 2;
+        player[r.type] += amt;
+        spawnParticles(r.x, 0.5, r.z, "#55ffcf", 10);
+        spawnFloatText(r.x, 0, r.z, `+${amt} ${r.icon}`, "#55ffcf");
+        say(`Collected +${amt} ${r.name} ${r.icon}!`);
         resources.splice(i, 1);
-        spawnResource(r.type);
+        spawnResource();
         updateHUD();
         return;
       }
     }
-    say("Move closer to Wood or Gems and press E!");
+    say("Walk closer to any glowing material and press E!");
   }
 
   function craftMedkit() {
-    if (player.gems >= 3) {
-      player.gems -= 3;
+    if (player.gems >= 2 && player.plasma >= 1) {
+      player.gems -= 2;
+      player.plasma -= 1;
       player.medkits++;
-      say("💊 Crafted 1 Medkit!");
+      say("💊 Crafted 1 Nano-Medkit!");
       updateHUD();
     } else {
-      say("Need 3 Gems 💎 to craft a Medkit!");
+      say("Need 2 Gems 💎 + 1 Plasma ⚡ to craft a Medkit!");
     }
   }
 
   function useMedkit() {
     if (player.medkits > 0 && player.hp < player.maxHp) {
       player.medkits--;
-      player.hp = Math.min(player.maxHp, player.hp + 45);
-      say("❤️ Restored +45 HP!");
+      player.hp = Math.min(player.maxHp, player.hp + 50);
+      spawnParticles(player.x, 0, player.z, "#22c55e", 14);
+      spawnFloatText(player.x, 0, player.z, "+50 HP", "#4ade80");
+      say("❤️ Restored +50 HP!");
       updateHUD();
     } else {
-      say("No medkits available or HP already full!");
+      say("No medkits left or HP is already full!");
     }
   }
-  function openShop() {
-    isPaused = true;
-    document.getElementById("shop-modal").style.display = "flex";
-    refreshShop();
+  let currentShopOffers = [];
+
+  function generateShopOffers() {
+    const upgradePool = [
+      { kind: "stat", title: "⚔️ Weapon Core", desc: "+12 Base Damage", cost: { gems: 3, titanium: 2 }, apply: () => { player.baseDamage += 12; } },
+      { kind: "stat", title: "⚡ Thruster Boots", desc: "+3 Run Speed", cost: { gems: 2, plasma: 2 }, apply: () => { player.speed += 3; } },
+      { kind: "stat", title: "🛡️ Titanium Plating", desc: "+35 Max HP & Full Heal", cost: { gems: 2, titanium: 3 }, apply: () => { player.maxHp += 35; player.hp = player.maxHp; } },
+      { kind: "stat", title: "🚀 Gravity Jets", desc: "+3.5 Jump Height", cost: { gems: 2, scrap: 3 }, apply: () => { player.jump += 3.5; } },
+      { kind: "stat", title: "🔋 Overclocked Capacitor", desc: "+15% Faster Fire Rate", cost: { gems: 3, plasma: 2 }, apply: () => { player.weapon = { ...player.weapon, rate: Math.max(0.08, player.weapon.rate * 0.85) }; } }
+    ];
+
+    // Pick 2 random upgrades + 1 random craftable weapon
+    const shuffledUpgrades = [...upgradePool].sort(() => Math.random() - 0.5).slice(0, 2);
+    const otherWeapons = weaponsList.filter(w => w.id !== player.weapon.id);
+    const randWeapon = otherWeapons[Math.floor(Math.random() * otherWeapons.length)];
+
+    const weaponOffer = {
+      kind: "weapon",
+      title: randWeapon.name,
+      desc: randWeapon.desc,
+      cost: { gems: 3, titanium: 2, scrap: 2 },
+      apply: () => { player.weapon = randWeapon; }
+    };
+
+    currentShopOffers = [...shuffledUpgrades, weaponOffer];
   }
 
-  function refreshShop() {
-    document.getElementById("shop-gems").textContent = `Available Gems: ${player.gems} 💎`;
-    document.getElementById("dmg-txt").textContent = `Lvl ${upgrades.damage} (Damage: ${player.damage})`;
-    document.getElementById("spd-txt").textContent = `Lvl ${upgrades.speed} (Speed: ${player.speed})`;
-    document.getElementById("hp-txt").textContent = `Lvl ${upgrades.maxHp} (Max HP: ${player.maxHp})`;
-    document.getElementById("jmp-txt").textContent = `Lvl ${upgrades.jump} (Jump: ${player.jump})`;
+  function canAfford(cost) {
+    return Object.entries(cost).every(([res, amt]) => (player[res] || 0) >= amt);
+  }
 
-    const map = [
-      ["damage", "btn-dmg"],
-      ["speed", "btn-spd"],
-      ["maxHp", "btn-hp"],
-      ["jump", "btn-jmp"]
-    ];
-    map.forEach(([key, id]) => {
-      const btn = document.getElementById(id);
-      btn.textContent = `Upgrade (${costs[key]} 💎)`;
-      btn.disabled = player.gems < costs[key];
+  function formatCost(cost) {
+    const icons = { gems: "💎", wood: "🪵", titanium: "🪨", plasma: "⚡", scrap: "🔩" };
+    return Object.entries(cost).map(([res, amt]) => `${amt}${icons[res]}`).join(" + ");
+  }
+
+  function openShop() {
+    isPaused = true;
+    generateShopOffers();
+    document.getElementById("shop-modal").style.display = "flex";
+    renderShopUI();
+  }
+
+  function renderShopUI() {
+    document.getElementById("shop-inv").textContent =
+      `Inventory: 💎 ${player.gems} | 🪨 ${player.titanium} | ⚡ ${player.plasma} | 🔩 ${player.scrap} | 🪵 ${player.wood}`;
+    document.getElementById("reroll-btn").disabled = player.gems < 2;
+
+    const container = document.getElementById("shop-cards");
+    container.innerHTML = "";
+
+    currentShopOffers.forEach((offer, idx) => {
+      const card = document.createElement("div");
+      card.className = "card" + (offer.kind === "weapon" ? " weapon-card" : "");
+      card.innerHTML = `
+        <div>
+          <h4>${offer.title}</h4>
+          <p>${offer.desc}</p>
+        </div>
+        <div>
+          <div class="cost-tag">Cost: ${formatCost(offer.cost)}</div>
+          <button ${!canAfford(offer.cost) || offer.bought ? "disabled" : ""} onclick="buyOffer(${idx})">
+            ${offer.bought ? "✅ EQUIPPED" : (offer.kind === "weapon" ? "🔨 CRAFT WEAPON" : "⬆️ UPGRADE")}
+          </button>
+        </div>
+      `;
+      container.appendChild(card);
     });
   }
 
-  function buyUpgrade(type) {
-    if (player.gems < costs[type]) return;
-    player.gems -= costs[type];
-    upgrades[type]++;
-    costs[type] += 2;
+  function buyOffer(idx) {
+    const offer = currentShopOffers[idx];
+    if (!offer || offer.bought || !canAfford(offer.cost)) return;
+    Object.entries(offer.cost).forEach(([res, amt]) => { player[res] -= amt; });
+    offer.apply();
+    offer.bought = true;
+    renderShopUI();
+    updateHUD();
+  }
 
-    if (type === "damage") player.damage += 15;
-    if (type === "speed") player.speed += 3;
-    if (type === "maxHp") { player.maxHp += 30; player.hp = player.maxHp; }
-    if (type === "jump") player.jump += 3;
-
-    refreshShop();
+  function rerollShop() {
+    if (player.gems < 2) return;
+    player.gems -= 2;
+    generateShopOffers();
+    renderShopUI();
     updateHUD();
   }
 
@@ -399,15 +588,22 @@
     wave++;
     spawnWave(wave);
   }
-
   function endGame(win) {
     gameEnded = true;
     document.getElementById("end-modal").style.display = "flex";
     document.getElementById("end-title").textContent = win ? "🏆 VICTORY! COLD BOSS DEFEATED!" : "💀 GAME OVER";
     document.getElementById("end-desc").textContent = win
-      ? "You defeated the Giant Cold Emoji Boss 🥶 and saved XENORA-7!"
-      : "The aliens were too strong. Upgrade your gear and try again!";
+      ? "You defeated the Giant Cold Emoji Boss 🥶 and conquered XENORA-7!"
+      : "The aliens overwhelmed you. Gather materials and craft stronger weapons!";
   }
+
+  window.addEventListener("mousemove", e => {
+    mouse.sx = e.clientX;
+    mouse.sy = e.clientY;
+    updateMouseWorld();
+  });
+  window.addEventListener("mousedown", e => { if (e.button === 0) mouse.down = true; });
+  window.addEventListener("mouseup", () => { mouse.down = false; });
 
   window.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
@@ -418,87 +614,106 @@
     if (k === " " && player.onGround && !isPaused) {
       player.vy = player.jump;
       player.onGround = false;
+      spawnParticles(player.x, 0, player.z, "#38bdf8", 6);
     }
-    if (k === "f") playerShoot();
     if (k === "e") gatherResource();
     if (k === "t") buildTurret();
     if (k === "h") useMedkit();
   });
-
   window.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
-  function drawGroundGrid() {
-    ctx.fillStyle = "#161229";
+
+  function renderScene(time) {
+    ctx.fillStyle = "#060913";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = "rgba(85, 255, 207, 0.22)";
-    ctx.lineWidth = 1;
+    // Twinkling starfield
+    stars.forEach(st => {
+      const alpha = 0.4 + 0.6 * Math.abs(Math.sin(time * 2 + st.twinkle));
+      ctx.fillStyle = `rgba(224, 242, 254, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(st.x % canvas.width, st.y, st.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Neon Planet Grid
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
+    ctx.lineWidth = 1.2;
     for (let i = -50; i <= 50; i += 10) {
       const a1 = project3D(i, 0, -50), a2 = project3D(i, 0, 50);
       if (a1 && a2) { ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y); ctx.stroke(); }
       const b1 = project3D(-50, 0, i), b2 = project3D(50, 0, i);
       if (b1 && b2) { ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke(); }
     }
-  }
 
-  function renderScene() {
-    drawGroundGrid();
+    // Mouse Target Reticle on Ground
+    const aimProj = project3D(mouse.wx, 0.1, mouse.wz);
+    if (aimProj && !isPaused) {
+      ctx.strokeStyle = "#55ffcf";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(aimProj.x, aimProj.y, 14, 7, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
 
-    // Collect all 3D objects and sort back-to-front by camera depth
-    const renderList = [];
+    // Collect & depth-sort 3D objects
+    const list = [];
+    resources.forEach(r => list.push({ kind: "res", obj: r, x: r.x, y: 0.8 + Math.sin(time * 3 + r.bob) * 0.25, z: r.z }));
+    turrets.forEach(t => list.push({ kind: "turret", obj: t, x: t.x, y: 1.0, z: t.z }));
+    enemies.forEach(e => list.push({ kind: "enemy", obj: e, x: e.x, y: e.isBoss ? 3.2 : 1.5 + Math.abs(Math.sin(time * 6 + e.wobble)) * 0.35, z: e.z }));
+    lasers.forEach(l => list.push({ kind: "laser", obj: l, x: l.x, y: l.y, z: l.z }));
+    particles.forEach(pt => list.push({ kind: "part", obj: pt, x: pt.x, y: pt.y, z: pt.z }));
+    list.push({ kind: "player", obj: player, x: player.x, y: player.y + 1.2, z: player.z });
 
-    resources.forEach(r => renderList.push({ kind: "res", obj: r, x: r.x, y: 0.8, z: r.z }));
-    turrets.forEach(t => renderList.push({ kind: "turret", obj: t, x: t.x, y: 1.0, z: t.z }));
-    enemies.forEach(e => renderList.push({ kind: "enemy", obj: e, x: e.x, y: e.isBoss ? 3.2 : 1.5, z: e.z }));
-    lasers.forEach(l => renderList.push({ kind: "laser", obj: l, x: l.x, y: l.y, z: l.z }));
-    renderList.push({ kind: "player", obj: player, x: player.x, y: player.y + 1.2, z: player.z });
+    list.forEach(it => { it.proj = project3D(it.x, it.y, it.z); });
+    list.filter(it => it.proj !== null).sort((a, b) => b.proj.depth - a.proj.depth).forEach(it => {
+      const p = it.proj, s = p.scale;
 
-    renderList.forEach(item => { item.proj = project3D(item.x, item.y, item.z); });
-    renderList.filter(i => i.proj !== null).sort((a, b) => b.proj.depth - a.proj.depth).forEach(item => {
-      const p = item.proj;
-      const s = p.scale;
-
-      // Ground shadow
-      const sh = project3D(item.x, 0, item.z);
-      if (sh) {
-        ctx.fillStyle = "rgba(0,0,0,0.45)";
-        ctx.beginPath();
-        ctx.ellipse(sh.x, sh.y, 1.1 * s, 0.55 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
+      if (it.kind !== "part" && it.kind !== "laser") {
+        const sh = project3D(it.x, 0, it.z);
+        if (sh) {
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.beginPath();
+          ctx.ellipse(sh.x, sh.y, 1.1 * s, 0.55 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
-      if (item.kind === "res") {
-        ctx.font = `${Math.max(14, 1.8 * s)}px Arial`;
+      if (it.kind === "res") {
+        ctx.font = `${Math.max(15, 1.9 * s)}px Arial`;
         ctx.textAlign = "center";
-        ctx.fillText(item.obj.type === "gem" ? "💎" : "🪵", p.x, p.y);
-      } else if (item.kind === "turret") {
+        ctx.fillText(it.obj.icon, p.x, p.y);
+      } else if (it.kind === "turret") {
         ctx.fillStyle = "#92400e";
         ctx.fillRect(p.x - 0.8 * s, p.y - 0.6 * s, 1.6 * s, 1.4 * s);
         ctx.fillStyle = "#facc15";
         ctx.beginPath();
         ctx.arc(p.x, p.y - 0.9 * s, 0.55 * s, 0, Math.PI * 2);
         ctx.fill();
-      } else if (item.kind === "laser") {
-        ctx.fillStyle = item.obj.color;
+      } else if (it.kind === "laser") {
+        ctx.fillStyle = it.obj.color;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, Math.max(3, 0.35 * s), 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, Math.max(3.5, 0.38 * s), 0, Math.PI * 2);
         ctx.fill();
-      } else if (item.kind === "player") {
-        // 3D Astronaut Suit
-        ctx.fillStyle = "#3b82f6";
+      } else if (it.kind === "part") {
+        ctx.fillStyle = it.obj.color;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.0 * s, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, Math.max(2, 0.25 * s), 0, Math.PI * 2);
+        ctx.fill();
+      } else if (it.kind === "player") {
+        ctx.fillStyle = "#2563eb";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.05 * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#93c5fd";
         ctx.beginPath();
-        ctx.arc(p.x, p.y - 0.9 * s, 0.65 * s, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y - 0.9 * s, 0.68 * s, 0, Math.PI * 2);
         ctx.fill();
-      } else if (item.kind === "enemy") {
-        const en = item.obj;
-        const size = en.isBoss ? 5.2 * s : 2.5 * s;
-        // 3D Glowing Aura + Crisp Alien / Cold Emoji
-        ctx.fillStyle = en.isBoss ? "rgba(56, 189, 248, 0.35)" : "rgba(92, 230, 92, 0.25)";
+      } else if (it.kind === "enemy") {
+        const en = it.obj;
+        const size = en.isBoss ? 5.4 * s : 2.6 * s;
+        ctx.fillStyle = en.isBoss ? "rgba(56, 189, 248, 0.35)" : "rgba(74, 222, 128, 0.25)";
         ctx.beginPath();
-        ctx.arc(p.x, p.y, size * 0.62, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, size * 0.65, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.font = `${Math.max(18, size)}px Arial`;
@@ -506,12 +721,22 @@
         ctx.textBaseline = "middle";
         ctx.fillText(en.isBoss ? "🥶" : "👽", p.x, p.y);
 
-        // HP Bar above enemy
-        const barW = en.isBoss ? 4.5 * s : 1.8 * s;
-        ctx.fillStyle = "#333";
-        ctx.fillRect(p.x - barW / 2, p.y - size * 0.75, barW, 5);
-        ctx.fillStyle = en.isBoss ? "#38bdf8" : "#ff4d4d";
-        ctx.fillRect(p.x - barW / 2, p.y - size * 0.75, barW * (en.hp / en.maxHp), 5);
+        const barW = en.isBoss ? 4.8 * s : 1.9 * s;
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(p.x - barW / 2, p.y - size * 0.78, barW, 5);
+        ctx.fillStyle = en.isBoss ? "#38bdf8" : "#f43f5e";
+        ctx.fillRect(p.x - barW / 2, p.y - size * 0.78, barW * (en.hp / en.maxHp), 5);
+      }
+    });
+
+    // Floating Damage & Pickup Numbers
+    floatTexts.forEach(ft => {
+      const p = project3D(ft.x, ft.y, ft.z);
+      if (p) {
+        ctx.fillStyle = ft.color;
+        ctx.font = "bold 15px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(ft.text, p.x, p.y);
       }
     });
   }
@@ -521,9 +746,13 @@
   function gameLoop(now) {
     requestAnimationFrame(gameLoop);
     const dt = Math.min((now - lastTime) / 1000, 0.1);
+    const time = now / 1000;
     lastTime = now;
 
     if (!isPaused && !gameEnded) {
+      player.fireTimer = Math.max(0, player.fireTimer - dt);
+      if (keys["f"] || mouse.down) playerShoot();
+
       let mx = 0, mz = 0;
       if (keys["w"] || keys["arrowup"]) mz -= 1;
       if (keys["s"] || keys["arrowdown"]) mz += 1;
@@ -532,38 +761,30 @@
 
       if (mx !== 0 || mz !== 0) {
         const len = Math.hypot(mx, mz);
-        mx /= len; mz /= len;
-        player.x += mx * player.speed * dt;
-        player.z += mz * player.speed * dt;
-        player.facing = Math.atan2(mx, mz);
+        player.x += (mx / len) * player.speed * dt;
+        player.z += (mz / len) * player.speed * dt;
       }
 
       player.x = Math.max(-48, Math.min(48, player.x));
       player.z = Math.max(-48, Math.min(48, player.z));
 
-      // Jump & Gravity
       player.y += player.vy * dt;
-      if (player.y > 0) {
-        player.vy -= 34 * dt;
-      } else {
-        player.y = 0;
-        player.vy = 0;
-        player.onGround = true;
-      }
+      if (player.y > 0) player.vy -= 34 * dt;
+      else { player.y = 0; player.vy = 0; player.onGround = true; }
 
-      // Wood Turrets Auto-Fire
+      // Turret Auto-Fire
       turrets.forEach(t => {
         t.cooldown -= dt;
         if (t.cooldown <= 0 && enemies.length > 0) {
-          let target = null, best = 26;
+          let target = null, best = 28;
           enemies.forEach(en => {
             const d = Math.hypot(en.x - t.x, en.z - t.z);
             if (d < best) { best = d; target = en; }
           });
           if (target) {
             const ang = Math.atan2(target.x - t.x, target.z - t.z);
-            shootLaser(t.x, 1.4, t.z, Math.sin(ang) * 42, Math.cos(ang) * 42, 18, "#facc15");
-            t.cooldown = 0.85;
+            shootLaser(t.x, 1.4, t.z, Math.sin(ang) * 45, Math.cos(ang) * 45, 20, "#facc15");
+            t.cooldown = 0.8;
           }
         }
       });
@@ -578,14 +799,18 @@
         let hit = false;
         for (let j = enemies.length - 1; j >= 0; j--) {
           const en = enemies[j];
-          const hitDist = en.isBoss ? 3.5 : 1.7;
-          if (Math.hypot(l.x - en.x, l.z - en.z) < hitDist) {
+          if (Math.hypot(l.x - en.x, l.z - en.z) < (en.isBoss ? 3.6 : 1.8)) {
             en.hp -= l.dmg;
             hit = true;
+            spawnParticles(l.x, 1.2, l.z, l.color, 5);
+            spawnFloatText(en.x, 1.5, en.z, `-${l.dmg}`, "#fde047");
+
             if (en.hp <= 0) {
               enemies.splice(j, 1);
               player.gems += en.isBoss ? 25 : 2;
-              say(en.isBoss ? "🥶 COLD BOSS DEFEATED! +25 Gems!" : "👽 Alien defeated! +2 Gems!");
+              spawnParticles(en.x, 1.5, en.z, en.isBoss ? "#38bdf8" : "#4ade80", 22);
+              cam.shake = en.isBoss ? 0.6 : 0.18;
+              say(en.isBoss ? "🥶 COLD BOSS DEFEATED! +25 Gems!" : "👽 Alien vaporized! +2 Gems!");
               updateHUD();
               if (en.isBoss) endGame(true);
             }
@@ -595,7 +820,7 @@
         if (hit || l.life <= 0) lasers.splice(i, 1);
       }
 
-      // Enemy AI & Damage
+      // Enemy Movement & Attacks
       enemies.forEach(en => {
         const dx = player.x - en.x;
         const dz = player.z - en.z;
@@ -604,8 +829,9 @@
           en.x += (dx / dist) * en.speed * dt;
           en.z += (dz / dist) * en.speed * dt;
         }
-        if (dist < (en.isBoss ? 3.5 : 1.8) && player.y < 2.2) {
+        if (dist < (en.isBoss ? 3.6 : 1.8) && player.y < 2.2) {
           player.hp -= en.dmg * dt;
+          cam.shake = Math.max(cam.shake, 0.12);
           updateHUD();
           if (player.hp <= 0) {
             player.hp = 0;
@@ -615,16 +841,32 @@
         }
       });
 
-      if (enemies.length === 0 && !gameEnded && wave <= maxNormalWaves) {
-        openShop();
+      // Update Particles & Floating Numbers
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.z += pt.vz * dt;
+        pt.vy -= 20 * dt;
+        pt.life -= dt;
+        if (pt.life <= 0) particles.splice(i, 1);
       }
+      for (let i = floatTexts.length - 1; i >= 0; i--) {
+        floatTexts[i].y += 2.5 * dt;
+        floatTexts[i].life -= dt;
+        if (floatTexts[i].life <= 0) floatTexts.splice(i, 1);
+      }
+
+      if (enemies.length === 0 && !gameEnded && wave <= maxNormalWaves) openShop();
     }
 
-    // Smooth Camera Follow
-    cam.x += (player.x - cam.x) * 0.12;
-    cam.z += (player.z + 24 - cam.z) * 0.12;
+    // Smooth Camera Follow + Screen Shake
+    cam.shake = Math.max(0, cam.shake - dt * 1.8);
+    const sx = (Math.random() - 0.5) * cam.shake * 2.5;
+    const sz = (Math.random() - 0.5) * cam.shake * 2.5;
+    cam.x += (player.x - cam.x) * 0.12 + sx;
+    cam.z += (player.z + 25 - cam.z) * 0.12 + sz;
+    updateMouseWorld();
 
-    renderScene();
+    renderScene(time);
   }
 
   requestAnimationFrame(gameLoop);
