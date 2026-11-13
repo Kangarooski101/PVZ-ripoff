@@ -5,44 +5,95 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ALIEN FRONTIER 3D</title>
+
 <style>
 *{box-sizing:border-box}
+
 body{
- margin:0;background:#090e19;color:white;
- font-family:Arial;text-align:center;
+ margin:0;
+ background:#090e19;
+ color:white;
+ font-family:Arial,sans-serif;
+ text-align:center;
 }
-h1{color:#5effd5;letter-spacing:4px}
+
+h1{
+ color:#5effd5;
+ letter-spacing:3px;
+ font-size:clamp(20px,5vw,32px);
+}
+
 #game{
- display:block;width:min(96vw,800px);
- height:auto;aspect-ratio:8/5;
- margin:auto;background:#211d3b;
+ display:block;
+ width:min(96vw,800px);
+ height:auto;
+ aspect-ratio:8/5;
+ margin:auto;
+ background:#211d3b;
  border:2px solid #50eecb;
+ touch-action:none;
 }
+
 .panel{
- width:min(94%,780px);margin:10px auto;
- background:#152337;padding:12px;
- border:1px solid #45d9c2;border-radius:8px;
+ width:min(94%,780px);
+ margin:10px auto;
+ background:#152337;
+ padding:12px;
+ border:1px solid #45d9c2;
+ border-radius:8px;
 }
+
 button{
- background:#145c54;color:white;
+ background:#145c54;
+ color:white;
  border:1px solid #5effd5;
- padding:10px;margin:4px;cursor:pointer;
+ padding:10px;
+ margin:4px;
+ cursor:pointer;
+ border-radius:5px;
 }
+
+button:active{
+ background:#238c7c;
+}
+
 #status{color:#7dffe0}
 small{color:#a8c5d2}
+
+#crosshair{
+ position:absolute;
+ pointer-events:none;
+ color:white;
+ font-size:22px;
+}
+
+#gameWrap{
+ position:relative;
+ width:min(96vw,800px);
+ margin:auto;
+}
+
 </style>
 </head>
+
 <body>
 
 <h1>👽 ALIEN FRONTIER 3D</h1>
 <p>XENORA-7 SURVIVAL EXPEDITION</p>
 
-<canvas id="game" width="800" height="500"></canvas>
+<div id="gameWrap">
+ <canvas id="game" width="800" height="500"></canvas>
+ <div id="crosshair"
+ style="left:50%;top:50%;transform:translate(-50%,-50%)">
+ +
+ </div>
+</div>
 
 <div class="panel">
  <p id="stats">Health: 100 | Hunger: 100</p>
  <p id="inventory">Crystals: 0 | Wood: 0 | Medkits: 0</p>
- <p id="status">Explore the alien planet!</p>
+ <p id="status">Click START TO PLAY</p>
+
  <button onclick="craft()">CRAFT MEDKIT</button>
  <button onclick="heal()">USE MEDKIT</button>
  <button onclick="save()">SAVE GAME</button>
@@ -59,20 +110,28 @@ small{color:#a8c5d2}
 </div>
 
 <script>
+"use strict";
+
 const canvas=document.getElementById("game");
-const gl=canvas.getContext("webgl",{antialias:false});
+
+const gl=canvas.getContext("webgl",{
+ antialias:false,
+ alpha:false,
+ powerPreference:"low-power"
+});
 
 if(!gl){
  document.getElementById("status").textContent=
- "WebGL is unavailable in this browser.";
+ "WebGL unavailable. Enable hardware acceleration in Chrome.";
  throw new Error("WebGL unavailable");
 }
 
-// LIGHTWEIGHT 3D GRAPHICS
+// SHADERS
 
 const vertexShader=`
 attribute vec3 position;
 uniform mat4 mvp;
+
 void main(){
  gl_Position=mvp*vec4(position,1.0);
 }
@@ -81,6 +140,7 @@ void main(){
 const fragmentShader=`
 precision mediump float;
 uniform vec3 color;
+
 void main(){
  gl_FragColor=vec4(color,1.0);
 }
@@ -90,15 +150,25 @@ function shader(type,source){
  const s=gl.createShader(type);
  gl.shaderSource(s,source);
  gl.compileShader(s);
- if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))
+
+ if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){
   throw new Error(gl.getShaderInfoLog(s));
+ }
+
  return s;
 }
 
 const program=gl.createProgram();
+
 gl.attachShader(program,shader(gl.VERTEX_SHADER,vertexShader));
 gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragmentShader));
+
 gl.linkProgram(program);
+
+if(!gl.getProgramParameter(program,gl.LINK_STATUS)){
+ throw new Error(gl.getProgramInfoLog(program));
+}
+
 gl.useProgram(program);
 
 const position=gl.getAttribLocation(program,"position");
@@ -112,47 +182,85 @@ gl.clearColor(.10,.09,.19,1);
 
 function geometry(vertices){
  const buffer=gl.createBuffer();
+
  gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
- gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
- return {buffer,count:vertices.length/3};
+ gl.bufferData(
+  gl.ARRAY_BUFFER,
+  new Float32Array(vertices),
+  gl.STATIC_DRAW
+ );
+
+ return {
+  buffer,
+  count:vertices.length/3
+ };
 }
 
 const cube=geometry([
- // Front
  -1,-1,1, 1,-1,1, 1,1,1,
  -1,-1,1, 1,1,1, -1,1,1,
- // Back
+
  1,-1,-1, -1,-1,-1, -1,1,-1,
  1,-1,-1, -1,1,-1, 1,1,-1,
- // Left
+
  -1,-1,-1, -1,-1,1, -1,1,1,
  -1,-1,-1, -1,1,1, -1,1,-1,
- // Right
+
  1,-1,1, 1,-1,-1, 1,1,-1,
  1,-1,1, 1,1,-1, 1,1,1,
- // Top
+
  -1,1,1, 1,1,1, 1,1,-1,
  -1,1,1, 1,1,-1, -1,1,-1,
- // Bottom
+
  -1,-1,-1, 1,-1,-1, 1,-1,1,
  -1,-1,-1, 1,-1,1, -1,-1,1
 ]);
+
+function createSphere(lat=12,lon=16){
+ const vertices=[];
+
+ for(let i=0;i<lat;i++){
+  const t1=i*Math.PI/lat;
+  const t2=(i+1)*Math.PI/lat;
+
+  for(let j=0;j<lon;j++){
+   const p1=j*2*Math.PI/lon;
+   const p2=(j+1)*2*Math.PI/lon;
+
+   function point(t,p){
+    return [
+     Math.sin(t)*Math.cos(p),
+     Math.cos(t),
+     Math.sin(t)*Math.sin(p)
+    ];
+   }
+
+   const a=point(t1,p1);
+   const b=point(t1,p2);
+   const c=point(t2,p1);
+   const d=point(t2,p2);
+
+   vertices.push(...a,...b,...c,...b,...d,...c);
+  }
+ }
+
+ return geometry(vertices);
+}
+
+const sphere=createSphere();
 
 const rock=geometry([
  0,1,0, -1,-1,1, 1,-1,1,
  0,1,0, 1,-1,1, 1,-1,-1,
  0,1,0, 1,-1,-1, -1,-1,-1,
- 0,1,0, -1,-1,-1, -1,-1,1,
- 0,-1,0, 1,-1,1, -1,-1,1,
- 0,-1,0, 1,-1,-1, 1,-1,1,
- 0,-1,0, -1,-1,-1, 1,-1,-1,
- 0,-1,0, -1,-1,1, -1,-1,-1
+ 0,1,0, -1,-1,-1, -1,-1,1
 ]);
 
 // MATRIX MATH
 
 function multiply(a,b){
  const o=new Float32Array(16);
+
  for(let c=0;c<4;c++){
   for(let r=0;r<4;r++){
    o[c*4+r]=
@@ -162,12 +270,14 @@ function multiply(a,b){
     a[12+r]*b[c*4+3];
   }
  }
+
  return o;
 }
 
 function perspective(fov,aspect,near,far){
  const f=1/Math.tan(fov/2);
  const nf=1/(near-far);
+
  return new Float32Array([
   f/aspect,0,0,0,
   0,f,0,0,
@@ -180,12 +290,17 @@ function lookAt(eye,target){
  let zx=eye[0]-target[0];
  let zy=eye[1]-target[1];
  let zz=eye[2]-target[2];
+
  let l=Math.hypot(zx,zy,zz);
+
  zx/=l;zy/=l;zz/=l;
 
  let xx=zz,xy=0,xz=-zx;
+
  l=Math.hypot(xx,xz);
- xx/=l;xz/=l;
+
+ xx/=l;
+ xz/=l;
 
  const yx=zy*xz;
  const yy=zz*xx-zx*xz;
@@ -195,6 +310,7 @@ function lookAt(eye,target){
   xx,yx,zx,0,
   xy,yy,zy,0,
   xz,yz,zz,0,
+
   -(xx*eye[0]+xy*eye[1]+xz*eye[2]),
   -(yx*eye[0]+yy*eye[1]+yz*eye[2]),
   -(zx*eye[0]+zy*eye[1]+zz*eye[2]),1
@@ -202,7 +318,9 @@ function lookAt(eye,target){
 }
 
 function model(x,y,z,sx,sy,sz,rot=0){
- const c=Math.cos(rot),s=Math.sin(rot);
+ const c=Math.cos(rot);
+ const s=Math.sin(rot);
+
  return new Float32Array([
   c*sx,0,-s*sx,0,
   0,sy,0,0,
@@ -212,27 +330,36 @@ function model(x,y,z,sx,sy,sz,rot=0){
 }
 
 const projection=perspective(
- Math.PI/3,800/500,.1,300
+ Math.PI*.44,800/500,.1,200
 );
 
 function draw(g,mvp,color){
  gl.bindBuffer(gl.ARRAY_BUFFER,g.buffer);
+
  gl.enableVertexAttribArray(position);
- gl.vertexAttribPointer(position,3,gl.FLOAT,false,0,0);
+
+ gl.vertexAttribPointer(
+  position,3,gl.FLOAT,false,0,0
+ );
+
  gl.uniformMatrix4fv(mvpLocation,false,mvp);
  gl.uniform3fv(colorLocation,color);
+
  gl.drawArrays(gl.TRIANGLES,0,g.count);
 }
+
+let projectionView;
 
 function object(g,x,y,z,sx,sy,sz,color,rot=0){
  const m=model(x,y,z,sx,sy,sz,rot);
  draw(g,multiply(projectionView,m),color);
 }
 
-// WORLD
+// PLAYER
 
 const player={
- x:0,z:5,
+ x:0,
+ z:5,
  health:100,
  hunger:100,
  crystals:0,
@@ -245,15 +372,18 @@ let pitch=0;
 let started=false;
 let dead=false;
 let last=0;
-let elapsed=0;
 
 const keys={};
+
 let resources=[];
 let enemies=[];
+let trees=[];
 
 function random(a,b){
  return a+Math.random()*(b-a);
 }
+
+// WORLD GENERATION
 
 function spawnResource(){
  resources.push({
@@ -274,32 +404,6 @@ function spawnEnemy(){
 for(let i=0;i<35;i++)spawnResource();
 for(let i=0;i<6;i++)spawnEnemy();
 
-// ALIEN PLANET TERRAIN
-
-const terrainVertices=[];
-
-function heightAt(x,z){
- return Math.sin(x*.15)*.5+
- Math.cos(z*.16)*.4+
- Math.sin((x+z)*.09)*.3;
-}
-
-for(let x=-50;x<50;x+=2){
- for(let z=-50;z<50;z+=2){
-  const a=[x,heightAt(x,z),z];
-  const b=[x+2,heightAt(x+2,z),z];
-  const c=[x,heightAt(x,z+2),z+2];
-  const d=[x+2,heightAt(x+2,z+2),z+2];
-
-  terrainVertices.push(...a,...b,...c,...b,...d,...c);
- }
-}
-
-const terrainMesh=geometry(terrainVertices);
-
-// ALIEN TREES
-
-const trees=[];
 for(let i=0;i<35;i++){
  trees.push({
   x:random(-45,45),
@@ -308,14 +412,43 @@ for(let i=0;i<35;i++){
  });
 }
 
+// TERRAIN
+
+function heightAt(x,z){
+ return Math.sin(x*.15)*.5+
+ Math.cos(z*.16)*.4+
+ Math.sin((x+z)*.09)*.3;
+}
+
+const terrainVertices=[];
+
+for(let x=-50;x<50;x+=2){
+ for(let z=-50;z<50;z+=2){
+
+  const a=[x,heightAt(x,z),z];
+  const b=[x+2,heightAt(x+2,z),z];
+  const c=[x,heightAt(x,z+2),z+2];
+  const d=[x+2,heightAt(x+2,z+2),z+2];
+
+  terrainVertices.push(
+   ...a,...b,...c,
+   ...b,...d,...c
+  );
+ }
+}
+
+const terrainMesh=geometry(terrainVertices);
+
 // INPUT
 
 document.addEventListener("keydown",e=>{
  const k=e.key.toLowerCase();
+
  keys[k]=true;
 
- if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))
+ if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k)){
   e.preventDefault();
+ }
 
  if(e.repeat)return;
 
@@ -330,13 +463,17 @@ document.addEventListener("keyup",e=>{
 });
 
 canvas.addEventListener("click",()=>{
- if(started&&!dead)canvas.requestPointerLock();
+ if(started&&!dead){
+  canvas.requestPointerLock();
+ }
 });
 
 document.addEventListener("mousemove",e=>{
  if(!document.pointerLockElement)return;
+
  yaw-=e.movementX*.003;
  pitch-=e.movementY*.002;
+
  pitch=Math.max(-.5,Math.min(.5,pitch));
 });
 
@@ -352,7 +489,11 @@ function collect(){
 
  for(const r of resources){
   const d=Math.hypot(r.x-player.x,r.z-player.z);
-  if(d<best){best=d;closest=r;}
+
+  if(d<best){
+   best=d;
+   closest=r;
+  }
  }
 
  if(!closest){
@@ -378,7 +519,11 @@ function attack(){
 
  for(const e of enemies){
   const d=Math.hypot(e.x-player.x,e.z-player.z);
-  if(d<best){best=d;target=e;}
+
+  if(d<best){
+   best=d;
+   target=e;
+  }
  }
 
  if(!target){
@@ -391,7 +536,9 @@ function attack(){
  if(target.hp<=0){
   enemies.splice(enemies.indexOf(target),1);
   player.crystals++;
+
   say("Alien defeated! +1 crystal");
+
   spawnEnemy();
  }else{
   say("Alien hit!");
@@ -408,19 +555,28 @@ function craft(){
  }else{
   say("Need 3 crystals!");
  }
+
  updateUI();
 }
 
 function heal(){
  if(player.medkits>0&&player.health<100){
   player.medkits--;
-  player.health=Math.min(100,player.health+35);
+
+  player.health=Math.min(
+   100,
+   player.health+35
+  );
+
   say("Health restored!");
  }else{
   say("No medkits available!");
  }
+
  updateUI();
 }
+
+// UI
 
 function updateUI(){
  document.getElementById("stats").textContent=
@@ -433,18 +589,37 @@ function updateUI(){
  " | 💊 Medkits: "+player.medkits;
 }
 
-// SAVE GAME
+// SAVE / LOAD
 
 function save(){
- localStorage.setItem("alien3Dsave",JSON.stringify(player));
- say("Game saved!");
+ try{
+  localStorage.setItem(
+   "alien3Dsave",
+   JSON.stringify(player)
+  );
+
+  say("Game saved!");
+ }catch(e){
+  say("Saving unavailable in this browser!");
+ }
 }
 
 function load(){
  try{
-  const d=JSON.parse(localStorage.getItem("alien3Dsave"));
+  const d=JSON.parse(
+   localStorage.getItem("alien3Dsave")
+  );
+
   if(d){
-   Object.assign(player,d);
+   for(const k of [
+    "x","z","health","hunger",
+    "crystals","wood","medkits"
+   ]){
+    if(Number.isFinite(d[k])){
+     player[k]=d[k];
+    }
+   }
+
    updateUI();
    say("Game loaded!");
   }
@@ -453,34 +628,46 @@ function load(){
  }
 }
 
-// START GAME
-
-document.getElementById("status").textContent="Click START TO PLAY";
+// START
 
 const startButton=document.createElement("button");
+
 startButton.textContent="START 3D GAME";
+
 startButton.onclick=()=>{
+ if(started)return;
+
  started=true;
  startButton.remove();
+
  load();
+
  canvas.requestPointerLock();
+
  say("Welcome to XENORA-7!");
 };
 
 document.querySelector(".panel").appendChild(startButton);
 
-// RENDERING
-
-let projectionView;
+// RENDER
 
 function render(){
- gl.viewport(0,0,800,500);
- gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ gl.viewport(
+  0,0,
+  gl.drawingBufferWidth,
+  gl.drawingBufferHeight
+ );
 
+ gl.clear(
+  gl.COLOR_BUFFER_BIT|
+  gl.DEPTH_BUFFER_BIT
+ );
+
+ // FIRST PERSON CAMERA
  const eye=[
-  player.x+Math.sin(yaw)*.3,
-  heightAt(player.x,player.z)+1.8,
-  player.z+Math.cos(yaw)*.3
+  player.x,
+  heightAt(player.x,player.z)+1.65,
+  player.z
  ];
 
  const direction=[
@@ -496,82 +683,223 @@ function render(){
  ];
 
  projectionView=multiply(
-  projection,lookAt(eye,target)
+  projection,
+  lookAt(eye,target)
  );
 
- // Ground
- draw(terrainMesh,projectionView,[.30,.21,.37]);
+ // GROUND
+ draw(
+  terrainMesh,
+  projectionView,
+  [.30,.21,.37]
+ );
 
- // Mountains
+ // MOUNTAINS
  for(let i=0;i<12;i++){
   const x=(i%4-2)*23;
   const z=-45-Math.floor(i/4)*18;
-  object(rock,x,7,z,8,12,7,[.22,.17,.32]);
+
+  object(
+   rock,x,7,z,
+   8,12,7,
+   [.22,.17,.32]
+  );
  }
 
- // Trees
+ // ALIEN TREES
  for(const t of trees){
-  object(cube,t.x,1,t.z,.3,1.5,.3,[.22,.48,.38]);
-  object(rock,t.x,3,t.z,1.4,1.8,1.4,[.18,.48,.38]);
+
+  object(
+   cube,t.x,1,t.z,
+   .3*t.size,1.5*t.size,.3*t.size,
+   [.22,.48,.38]
+  );
+
+  object(
+   sphere,t.x,3*t.size,t.z,
+   1.4*t.size,1.8*t.size,1.4*t.size,
+   [.18,.48,.38]
+  );
  }
 
- // Crystals and wood
+ // RESOURCES
  for(const r of resources){
+
   if(r.type==="crystal"){
-   object(rock,r.x,1,r.z,.5,1,.5,[.1,.95,.88]);
+   object(
+    rock,r.x,1,r.z,
+    .5,1,.5,
+    [.1,.95,.88]
+   );
   }else{
-   object(cube,r.x,.5,r.z,.6,.5,.6,[.65,.43,.22]);
+   object(
+    cube,r.x,.5,r.z,
+    .6,.5,.6,
+    [.65,.43,.22]
+   );
   }
  }
 
- // Enemies
+ // ACTUAL ALIEN CREATURES
  for(const e of enemies){
-  object(rock,e.x,1,e.z,.9,1.1,1,[.65,.12,.28]);
-  object(cube,e.x,1.5,e.z-.6,.15,.15,.15,[1,.1,.1]);
-  object(cube,e.x+.35,1.5,e.z-.6,.15,.15,.15,[1,.1,.1]);
+
+  // Body
+  object(
+   sphere,e.x,1.1,e.z,
+   .55,.8,.4,
+   [.28,.85,.48]
+  );
+
+  // Head
+  object(
+   sphere,e.x,2.05,e.z,
+   .72,.78,.58,
+   [.35,1,.55]
+  );
+
+  // Eyes
+  object(
+   sphere,e.x-.32,2.12,e.z-.48,
+   .22,.28,.12,
+   [.02,.04,.12]
+  );
+
+  object(
+   sphere,e.x+.32,2.12,e.z-.48,
+   .22,.28,.12,
+   [.02,.04,.12]
+  );
+
+  // Glowing pupils
+  object(
+   sphere,e.x-.32,2.12,e.z-.57,
+   .11,.17,.06,
+   [0,1,1]
+  );
+
+  object(
+   sphere,e.x+.32,2.12,e.z-.57,
+   .11,.17,.06,
+   [0,1,1]
+  );
+
+  // Mouth
+  object(
+   sphere,e.x,1.78,e.z-.53,
+   .23,.055,.06,
+   [.04,.12,.08]
+  );
+
+  // Antennae
+  object(
+   sphere,e.x-.35,2.85,e.z,
+   .09,.35,.09,
+   [.25,.8,.4]
+  );
+
+  object(
+   sphere,e.x+.35,2.85,e.z,
+   .09,.35,.09,
+   [.25,.8,.4]
+  );
+
+  // Antenna tips
+  object(
+   sphere,e.x-.35,3.2,e.z,
+   .13,.13,.13,
+   [1,.1,.8]
+  );
+
+  object(
+   sphere,e.x+.35,3.2,e.z,
+   .13,.13,.13,
+   [1,.1,.8]
+  );
+
+  // Arms
+  object(
+   sphere,e.x-.7,1.25,e.z,
+   .2,.55,.2,
+   [.2,.7,.4],
+   -.3
+  );
+
+  object(
+   sphere,e.x+.7,1.25,e.z,
+   .2,.55,.2,
+   [.2,.7,.4],
+   .3
+  );
+
+  // Legs
+  object(
+   sphere,e.x-.3,.35,e.z,
+   .22,.45,.22,
+   [.15,.5,.3]
+  );
+
+  object(
+   sphere,e.x+.3,.35,e.z,
+   .22,.45,.22,
+   [.15,.5,.3]
+  );
  }
-
- // Player visible in third-person-like view
- object(cube,player.x,.9,player.z,.35,.8,.35,[.2,1,.75]);
-
 }
+
+// UPDATE
 
 function update(dt){
  if(!started||dead)return;
 
- elapsed+=dt;
-
  const speed=keys.shift?10:6;
- let dx=0,dz=0;
+
+ let dx=0;
+ let dz=0;
 
  if(keys.w||keys.arrowup){
-  dx-=Math.sin(yaw);dz-=Math.cos(yaw);
+  dx-=Math.sin(yaw);
+  dz-=Math.cos(yaw);
  }
+
  if(keys.s||keys.arrowdown){
-  dx+=Math.sin(yaw);dz+=Math.cos(yaw);
+  dx+=Math.sin(yaw);
+  dz+=Math.cos(yaw);
  }
+
  if(keys.a||keys.arrowleft){
-  dx-=Math.cos(yaw);dz+=Math.sin(yaw);
+  dx-=Math.cos(yaw);
+  dz+=Math.sin(yaw);
  }
+
  if(keys.d||keys.arrowright){
-  dx+=Math.cos(yaw);dz-=Math.sin(yaw);
+  dx+=Math.cos(yaw);
+  dz-=Math.sin(yaw);
  }
 
  const length=Math.hypot(dx,dz)||1;
+
  player.x+=dx/length*speed*dt;
  player.z+=dz/length*speed*dt;
 
  player.x=Math.max(-48,Math.min(48,player.x));
  player.z=Math.max(-48,Math.min(48,player.z));
 
- player.hunger=Math.max(0,player.hunger-dt*.25);
+ // HUNGER
+ player.hunger=Math.max(
+  0,
+  player.hunger-dt*.25
+ );
 
- if(player.hunger<=0)player.health-=dt*3;
+ if(player.hunger<=0){
+  player.health-=dt*3;
+ }
 
- // Monsters chase the player
+ // ALIEN AI
  for(const e of enemies){
+
   const dx=player.x-e.x;
   const dz=player.z-e.z;
+
   const d=Math.hypot(dx,dz)||1;
 
   if(d<25){
@@ -579,22 +907,29 @@ function update(dt){
    e.z+=dz/d*dt*2;
   }
 
-  if(d<1.5)player.health-=dt*12;
+  if(d<1.5){
+   player.health-=dt*12;
+  }
  }
 
  player.health=Math.max(0,player.health);
+
  updateUI();
 
  if(player.health<=0){
   dead=true;
+
   document.exitPointerLock();
+
   say("YOU DIED! REFRESH TO RESTART.");
  }
-
 }
+
+// GAME LOOP
 
 function loop(time){
  const dt=Math.min((time-last)/1000||0,.04);
+
  last=time;
 
  update(dt);
@@ -609,3 +944,4 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
+
