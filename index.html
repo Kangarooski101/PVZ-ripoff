@@ -1,442 +1,755 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CineVault — Watch Movies & Play Games</title>
-  <link rel="stylesheet" href="style.css" />
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ALIEN FRONTIER LITE</title>
-<style>
-body{
- margin:0;
- background:#101526;
- color:white;
- font-family:Arial;
- text-align:center;
-}
-h1{color:#55ffcf;letter-spacing:3px}
-#game{
- width:min(95vw,700px);
- height:auto;
- aspect-ratio:7/5;
- background:#352b4a;
- border:3px solid #55ffcf;
- display:block;
- margin:10px auto;
- image-rendering:pixelated;
-}
-.panel{
- background:#182438;
- padding:12px;
- margin:10px auto;
- width:min(90%,650px);
- border:1px solid #55ffcf;
- border-radius:8px;
-}
-button{
- background:#17685e;
- color:white;
- border:1px solid #55ffcf;
- padding:10px 18px;
- margin:5px;
- cursor:pointer;
-}
-button:hover{background:#219c86}
-#stats{color:#8dffdf}
-#status{color:#ffe38c}
-</style>
+  <title>👽 ALIEN FRONTIER 3D</title>
+  <script src="https://cloudflare.com"></script>
+  <style>
+    * { box-sizing: border-box; user-select: none; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #0b0e17;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #hud {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(16, 24, 40, 0.85);
+      border: 2px solid #55ffcf;
+      border-radius: 10px;
+      padding: 14px 18px;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(85, 255, 207, 0.25);
+    }
+    #hud h1 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      color: #55ffcf;
+      letter-spacing: 2px;
+    }
+    .stat-row {
+      font-size: 15px;
+      margin: 4px 0;
+      font-weight: bold;
+    }
+    #status {
+      color: #ffe38c;
+      font-size: 14px;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+    #controls {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      background: rgba(16, 24, 40, 0.85);
+      border: 1px solid #55ffcf;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #b8f2e6;
+      pointer-events: none;
+    }
+    #action-bar {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      background: #17685e;
+      color: white;
+      border: 2px solid #55ffcf;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    button:hover:not(:disabled) {
+      background: #239b89;
+      transform: translateY(-2px);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(85, 255, 207, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    #shop-modal, #gameover-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 15, 0.85);
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    .modal-box {
+      background: #141e33;
+      border: 3px solid #55ffcf;
+      border-radius: 14px;
+      padding: 25px;
+      width: min(92vw, 520px);
+      text-align: center;
+      box-shadow: 0 0 30px rgba(85, 255, 207, 0.4);
+    }
+    .modal-box h2 {
+      color: #55ffcf;
+      margin-top: 0;
+      letter-spacing: 1.5px;
+    }
+    .upgrade-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .upgrade-card {
+      background: #1c2945;
+      border: 1px solid #3c8c7e;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .upgrade-card h4 { margin: 0 0 6px 0; color: #8dffdf; }
+    .upgrade-card p { margin: 0 0 10px 0; font-size: 13px; color: #ccc; }
+  </style>
 </head>
 <body>
 
-  <header>
-    <a href="#" class="logo">Cine<span>Vault</span></a>
-    <nav class="nav-tabs">
-      <button class="nav-btn active" data-tab="movies">Movies</button>
-      <button class="nav-btn" data-tab="games">Arcade (50+ Games)</button>
-      <button class="nav-btn" data-tab="watchlist">My List (<span id="watchlistCount">0</span>)</button>
-    </nav>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search movies & games..." />
-    </div>
-  </header>
+  <div id="hud">
+    <h1>👽 ALIEN FRONTIER 3D</h1>
+    <div class="stat-row" id="wave-info">🌊 Wave: 1 / 5</div>
+    <div class="stat-row" id="stats">❤️ HP: 100/100 | 🛡️ Turrets: 0</div>
+    <div class="stat-row" id="inventory">💎 Gems: 0 | 🪵 Wood: 0 | 💊 Medkits: 0</div>
+    <div id="status">Defeat all 3D Aliens! Gather Wood & Gems!</div>
+  </div>
 
-  <section class="hero" id="heroSection">
-    <div class="hero-content">
-      <span class="badge" id="heroBadge">Featured Premiere</span>
-      <h1 id="heroTitle">The Last Horizon</h1>
-      <p id="heroDesc">When a deep-space relay goes silent, an estranged crew must navigate an uncharted nebula to save Earth's final colony ship.</p>
-      <div class="hero-actions">
-        <button class="btn btn-play" id="heroWatchBtn">&#9654; Watch Now</button>
-        <button class="btn btn-secondary" id="featuredBtn">View Details</button>
-      </div>
-    </div>
-  </section>
+  <div id="crosshair"></div>
 
-  <main>
-    <div class="section-header">
-      <h2 id="sectionTitle">Stream Movies</h2>
-      <span class="item-count" id="itemCount"></span>
-    </div>
-    <div class="filters" id="genreFilters"></div>
-    <div class="grid" id="movieGrid"></div>
-  </main>
+  <div id="controls">
+    <b>WASD / Arrows</b> = Run &nbsp;|&nbsp;
+    <b>SPACE</b> = Jump &nbsp;|&nbsp;
+    <b>F</b> = Shoot Laser &nbsp;|&nbsp;
+    <b>E</b> = Gather Wood/Gems &nbsp;|&nbsp;
+    <b>T</b> = Build Wood Turret (5 Wood) &nbsp;|&nbsp;
+    <b>H</b> = Heal
+  </div>
 
-  <!-- Details & Watch/Play Modal -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal" id="modalContainer">
-      <button class="close-btn" id="closeModalBtn">&times;</button>
-      
-      <!-- Details View -->
-      <div class="modal-details-view" id="modalDetailsView">
-        <img id="modalPoster" src="" alt="Cover Art" />
-        <div class="modal-info">
-          <span class="badge" id="modalTypeBadge">Movie</span>
-          <h2 id="modalTitle"></h2>
-          <div class="modal-sub" id="modalMeta"></div>
-          <p class="modal-desc" id="modalDesc"></p>
-          <div class="modal-actions">
-            <button class="btn btn-play" id="watchNowBtn">&#9654; Watch Now</button>
-            <button class="btn btn-secondary" id="watchlistBtn">+ Add to My List</button>
-          </div>
+  <div id="action-bar">
+    <button onclick="buildTurret()">🪵 Build Turret (5 Wood)</button>
+    <button onclick="craftMedkit()">💊 Craft Medkit (3 Gems)</button>
+    <button onclick="useMedkit()">❤️ Use Medkit [H]</button>
+  </div>
+
+  <!-- Between-Wave Upgrade Shop -->
+  <div id="shop-modal">
+    <div class="modal-box">
+      <h2>🛒 WAVE CLEARED — UPGRADE SHOP</h2>
+      <p id="shop-gems" style="color:#8dffdf; font-weight:bold;">Available Gems: 0 💎</p>
+      <div class="upgrade-grid">
+        <div class="upgrade-card">
+          <h4>🔫 Blaster Damage</h4>
+          <p id="dmg-lvl">Level 1 (Damage: 25)</p>
+          <button id="btn-dmg" onclick="buyUpgrade('damage')">Upgrade (3 💎)</button>
+        </div>
+        <div class="upgrade-card">
+          <h4>⚡ Turbo Boots</h4>
+          <p id="spd-lvl">Level 1 (Speed: 14)</p>
+          <button id="btn-spd" onclick="buyUpgrade('speed')">Upgrade (3 💎)</button>
+        </div>
+        <div class="upgrade-card">
+          <h4>❤️ Exo-Armor Max HP</h4>
+          <p id="hp-lvl">Level 1 (Max HP: 100)</p>
+          <button id="btn-hp" onclick="buyUpgrade('maxHp')">Upgrade (3 💎)</button>
+        </div>
+        <div class="upgrade-card">
+          <h4>🚀 Jump Thrusters</h4>
+          <p id="jmp-lvl">Level 1 (Jump: 14)</p>
+          <button id="btn-jmp" onclick="buyUpgrade('jump')">Upgrade (3 💎)</button>
         </div>
       </div>
-
-      <!-- Interactive Player / Game Canvas View -->
-      <div class="modal-player-view" id="modalPlayerView" style="display: none;">
-        <div class="player-header">
-          <button class="btn btn-secondary btn-sm" id="backToDetailsBtn">&larr; Back to Details</button>
-          <h3 id="playerTitle">Now Playing</h3>
-          <button class="btn btn-secondary btn-sm" id="fullscreenBtn">&#x26F6; Fullscreen</button>
-        </div>
-        <div class="player-wrapper" id="playerWrapper">
-          <!-- Video player or Playable HTML5 Game injects here -->
-        </div>
-      </div>
-
+      <button style="background:#219c86; width:100%; font-size:16px;" onclick="nextWave()">
+        ▶ START NEXT WAVE
+      </button>
     </div>
   </div>
 
-  <script src="script.js"></script>
-<h1>👽 ALIEN FRONTIER</h1>
-<p>Survive on the planet XENORA-7</p>
-
-<canvas id="game" width="700" height="500"></canvas>
-
-<div class="panel">
- <div id="stats">Health: 100 | Hunger: 100</div>
- <p id="inventory">Wood: 0 | Crystals: 0 | Medkits: 0</p>
- <p id="status">Explore the alien planet!</p>
- <button onclick="craft()">CRAFT MEDKIT (3 CRYSTALS)</button>
- <button onclick="heal()">USE MEDKIT</button>
- <button onclick="saveGame()">SAVE GAME</button>
-</div>
-
-<div class="panel">
- <b>CONTROLS</b>
- <p>WASD / Arrows = Move</p>
- <p>E = Collect resources</p>
- <p>SPACE = Attack aliens</p>
- <p>Collect crystals and avoid the monsters!</p>
-</div>
-
+  <!-- Game Over / Victory Modal -->
+  <div id="gameover-modal">
+    <div class="modal-box">
+      <h2 id="end-title">💀 GAME OVER</h2>
+      <p id="end-desc">The aliens overwhelmed XENORA-7.</p>
+      <button onclick="location.reload()">🔄 Play Again</button>
+    </div>
+  </div>
 <script>
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+  // --- THREE.JS SCENE SETUP ---
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d1326);
+  scene.fog = new THREE.FogExp2(0x0d1326, 0.012);
 
-const player={
- x:350,y:250,
- health:100,
- hunger:100,
- crystals:0,
- wood:0,
- medkits:0
-};
+  const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 300);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  document.body.appendChild(renderer.domElement);
 
-const keys={};
-let resources=[];
-let enemies=[];
-let gameOver=false;
-let lastTime=0;
-let spawnTimer=0;
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x667799, 1.1);
+  scene.add(ambientLight);
 
-function random(a,b){
- return Math.random()*(b-a)+a;
-}
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  dirLight.position.set(30, 50, 25);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
 
-function spawnResource(){
- resources.push({
-  x:random(20,680),
-  y:random(20,480),
-  type:Math.random()<.5?"crystal":"wood"
- });
-}
+  // Alien Planet Ground
+  const groundGeo = new THREE.PlaneGeometry(160, 160);
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x241d38, roughness: 0.85 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
 
-function spawnEnemy(){
- enemies.push({
-  x:random(30,670),
-  y:random(30,470),
-  hp:2,
-  speed:random(35,65)
- });
-}
+  const gridHelper = new THREE.GridHelper(160, 40, 0x55ffcf, 0x2f264a);
+  scene.add(gridHelper);
 
-for(let i=0;i<20;i++)spawnResource();
-for(let i=0;i<4;i++)spawnEnemy();
+  // --- PLAYER 3D CHARACTER ---
+  const playerGroup = new THREE.Group();
+  const bodyMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.6, 0.6, 1.6, 16),
+    new THREE.MeshStandardMaterial({ color: 0x3b82f6 })
+  );
+  bodyMesh.position.y = 0.8;
+  playerGroup.add(bodyMesh);
 
-function updateUI(){
- document.getElementById("stats").textContent=
- "❤️ Health: "+Math.ceil(player.health)+
- " | 🍖 Hunger: "+Math.ceil(player.hunger);
+  const headMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.55, 16, 16),
+    new THREE.MeshStandardMaterial({ color: 0x93c5fd })
+  );
+  headMesh.position.y = 1.9;
+  playerGroup.add(headMesh);
 
- document.getElementById("inventory").textContent=
- "🪵 Wood: "+player.wood+
- " | 💎 Crystals: "+player.crystals+
- " | 💊 Medkits: "+player.medkits;
-}
+  const gunMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 0.25, 1.1),
+    new THREE.MeshStandardMaterial({ color: 0x55ffcf })
+  );
+  gunMesh.position.set(0.65, 1.2, 0.4);
+  playerGroup.add(gunMesh);
 
-function say(text){
- document.getElementById("status").textContent=text;
-}
+  scene.add(playerGroup);
 
-function distance(a,b){
- return Math.hypot(a.x-b.x,a.y-b.y);
-}
+  // --- 3D ALIEN EMOJI BUILDER (👽) ---
+  function createAlienEmojiMesh() {
+    const group = new THREE.Group();
 
-function collect(){
- for(let i=resources.length-1;i>=0;i--){
-  if(distance(player,resources[i])<30){
-   if(resources[i].type==="crystal"){
-    player.crystals++;
-    say("Crystal collected!");
-   }else{
-    player.wood++;
-    say("Alien wood collected!");
-   }
-   resources.splice(i,1);
-   spawnResource();
-   updateUI();
-   return;
+    // Alien green head (scaled sphere to look like classic 👽 upside-down teardrop)
+    const headGeo = new THREE.SphereGeometry(1.1, 24, 24);
+    headGeo.scale(0.95, 1.25, 0.8);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0x5ce65c, roughness: 0.35 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 1.5;
+    group.add(head);
+
+    // Big glossy black slanted alien eyes
+    const eyeGeo = new THREE.SphereGeometry(0.36, 16, 16);
+    eyeGeo.scale(0.65, 1.25, 0.35);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1 });
+
+    const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.42, 1.55, 0.72);
+    leftEye.rotation.set(-0.15, -0.35, -0.45);
+    group.add(leftEye);
+
+    const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+    rightEye.position.set(0.42, 1.55, 0.72);
+    rightEye.rotation.set(-0.15, 0.35, 0.45);
+    group.add(rightEye);
+
+    // Subtle alien mouth slit
+    const mouth = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.06, 0.1),
+      new THREE.MeshBasicMaterial({ color: 0x1b4d1b })
+    );
+    mouth.position.set(0, 0.85, 0.82);
+    group.add(mouth);
+
+    return group;
   }
- }
- say("Get closer to a resource!");
-}
 
-function attack(){
- let target=null;
- let closest=45;
+  // --- 3D COLD EMOJI BLUE GUY BOSS BUILDER (🥶) ---
+  function createColdBossMesh() {
+    const group = new THREE.Group();
 
- for(const enemy of enemies){
-  const d=distance(player,enemy);
-  if(d<closest){
-   closest=d;
-   target=enemy;
+    // Giant icy blue head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(3.2, 32, 32),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.25 })
+    );
+    head.position.y = 3.5;
+    group.add(head);
+
+    // Frosty white crown / ice cap on top
+    const iceCap = new THREE.Mesh(
+      new THREE.ConeGeometry(2.6, 1.8, 12),
+      new THREE.MeshStandardMaterial({ color: 0xe0f2fe, roughness: 0.2 })
+    );
+    iceCap.position.y = 6.5;
+    group.add(iceCap);
+
+    // Shivering wide eyes
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+
+    [-1.1, 1.1].forEach(xPos => {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 16), eyeMat);
+      eye.position.set(xPos, 4.1, 2.75);
+      group.add(eye);
+
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), pupilMat);
+      pupil.position.set(xPos, 4.1, 3.3);
+      group.add(pupil);
+    });
+
+    // Chattering teeth mouth (🥶)
+    const mouthBg = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 0.85, 0.4),
+      new THREE.MeshBasicMaterial({ color: 0x0c4a6e })
+    );
+    mouthBg.position.set(0, 2.3, 2.95);
+    group.add(mouthBg);
+
+    for (let i = -0.9; i <= 0.9; i += 0.45) {
+      const tooth = new THREE.Mesh(
+        new THREE.BoxGeometry(0.32, 0.7, 0.45),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      tooth.position.set(i, 2.3, 3.0);
+      group.add(tooth);
+    }
+
+    // Hanging icicles on chin
+    [-1.2, 0, 1.2].forEach(xPos => {
+      const icicle = new THREE.Mesh(
+        new THREE.ConeGeometry(0.35, 1.5, 8),
+        new THREE.MeshStandardMaterial({ color: 0xbae6fd })
+      );
+      icicle.rotation.x = Math.PI;
+      icicle.position.set(xPos, 0.8, 2.2);
+      group.add(icicle);
+    });
+
+    return group;
   }
- }
+  // --- GAME STATE & VARIABLES ---
+  const player = {
+    hp: 100,
+    maxHp: 100,
+    speed: 14,
+    jumpPower: 14,
+    damage: 25,
+    gems: 0,
+    wood: 5,
+    medkits: 1,
+    vy: 0,
+    onGround: true,
+    facingAngle: 0
+  };
 
- if(target){
-  target.hp--;
-  say("You hit an alien!");
+  const upgrades = { damage: 1, speed: 1, maxHp: 1, jump: 1 };
+  const costs = { damage: 3, speed: 3, maxHp: 3, jump: 3 };
 
-  if(target.hp<=0){
-   enemies.splice(enemies.indexOf(target),1);
-   player.crystals++;
-   say("Alien defeated! +1 crystal");
-   spawnEnemy();
+  let wave = 1;
+  const maxNormalWaves = 4; // Wave 5 is the Cold Boss!
+  let enemies = [];
+  let resources = [];
+  let lasers = [];
+  let turrets = [];
+  let isPaused = false;
+  let gameEnded = false;
+
+  const keys = {};
+
+  function say(msg) {
+    document.getElementById("status").textContent = msg;
   }
-  updateUI();
- }else{
-  say("No alien close enough!");
- }
-}
 
-function craft(){
- if(player.crystals>=3){
-  player.crystals-=3;
-  player.medkits++;
-  say("Medkit crafted!");
- }else{
-  say("You need 3 crystals!");
- }
- updateUI();
-}
-
-function heal(){
- if(player.medkits>0&&player.health<100){
-  player.medkits--;
-  player.health=Math.min(100,player.health+35);
-  say("Health restored!");
- }else{
-  say("No medkits available!");
- }
- updateUI();
-}
-
-function saveGame(){
- localStorage.setItem("alienLiteSave",JSON.stringify(player));
- say("Game saved!");
-}
-
-function loadGame(){
- try{
-  const saved=JSON.parse(localStorage.getItem("alienLiteSave"));
-  if(saved){
-   Object.assign(player,saved);
-   updateUI();
-   say("Save loaded!");
+  function updateHUD() {
+    const waveLabel = wave > maxNormalWaves ? "❄️ BOSS WAVE: COLD GUY 🥶" : `🌊 Wave: ${wave} / ${maxNormalWaves + 1}`;
+    document.getElementById("wave-info").textContent = waveLabel;
+    document.getElementById("stats").textContent =
+      `❤️ HP: ${Math.ceil(player.hp)}/${player.maxHp} | 🛡️ Wood Turrets: ${turrets.length}`;
+    document.getElementById("inventory").textContent =
+      `💎 Gems: ${player.gems} | 🪵 Wood: ${player.wood} | 💊 Medkits: ${player.medkits}`;
   }
- }catch(e){
-  say("No saved game!");
- }
-}
 
-document.addEventListener("keydown",e=>{
- const key=e.key.toLowerCase();
+  // --- SPAWN WOOD & GEMS ---
+  function spawnResource(type) {
+    const isGem = type === "gem";
+    const mesh = isGem
+      ? new THREE.Mesh(
+          new THREE.OctahedronGeometry(0.75),
+          new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x006688 })
+        )
+      : new THREE.Mesh(
+          new THREE.CylinderGeometry(0.45, 0.55, 1.8, 8),
+          new THREE.MeshStandardMaterial({ color: 0x92400e })
+        );
 
- if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key)){
-  e.preventDefault();
- }
+    mesh.position.set(
+      (Math.random() - 0.5) * 120,
+      isGem ? 1.0 : 0.9,
+      (Math.random() - 0.5) * 120
+    );
+    scene.add(mesh);
+    resources.push({ mesh, type });
+  }
 
- keys[key]=true;
+  for (let i = 0; i < 14; i++) spawnResource("wood");
+  for (let i = 0; i < 10; i++) spawnResource("gem");
 
- if(e.repeat)return;
+  // --- SPAWN WAVES & BOSS ---
+  function spawnWave(waveNum) {
+    if (waveNum <= maxNormalWaves) {
+      const count = 4 + waveNum * 2;
+      const hp = 40 + (waveNum - 1) * 30;
+      const speed = 5.5 + (waveNum - 1) * 1.6;
+      const dmg = 10 + (waveNum - 1) * 6;
 
- if(key==="e")collect();
- if(key===" ")attack();
- if(key==="c")craft();
- if(key==="h")heal();
+      for (let i = 0; i < count; i++) {
+        const mesh = createAlienEmojiMesh();
+        const angle = (Math.PI * 2 * i) / count;
+        const radius = 38 + Math.random() * 18;
+        mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+        scene.add(mesh);
+        enemies.push({ mesh, hp, maxHp: hp, speed, dmg, isBoss: false });
+      }
+      say(`Wave ${waveNum} started! Aliens are faster and stronger!`);
+    } else {
+      // BOSS WAVE: Cold Emoji Blue Guy 🥶
+      const bossMesh = createColdBossMesh();
+      bossMesh.position.set(0, 0, -45);
+      scene.add(bossMesh);
+      enemies.push({
+        mesh: bossMesh,
+        hp: 650,
+        maxHp: 650,
+        speed: 8.5,
+        dmg: 28,
+        isBoss: true
+      });
+      say("🥶 BOSS ALERT: THE GIANT COLD GUY HAS ARRIVED!");
+    }
+    updateHUD();
+  }
+
+  // --- SHOOTING LASER (F KEY) ---
+  function shootLaser(origin, dirVector, damage, color = 0x55ffcf) {
+    const laser = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 8, 8),
+      new THREE.MeshBasicMaterial({ color })
+    );
+    laser.position.copy(origin);
+    scene.add(laser);
+    lasers.push({
+      mesh: laser,
+      vel: dirVector.clone().multiplyScalar(48),
+      damage,
+      life: 1.5
+    });
+  }
+
+  function playerShoot() {
+    if (isPaused || gameEnded) return;
+    const dir = new THREE.Vector3(Math.sin(player.facingAngle), 0, Math.cos(player.facingAngle)).normalize();
+    const startPos = playerGroup.position.clone().add(new THREE.Vector3(0, 1.3, 0));
+    shootLaser(startPos, dir, player.damage, 0x55ffcf);
+  }
+
+  // --- WOOD UTILITY: BUILD AUTO-TURRETS & BARRICADES ---
+  function buildTurret() {
+    if (isPaused || gameEnded) return;
+    if (player.wood < 5) {
+      say("Need 5 Wood 🪵 to build an Auto-Turret!");
+      return;
+    }
+    player.wood -= 5;
+
+    const turretGroup = new THREE.Group();
+    const base = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 1.0, 1.4, 8),
+      new THREE.MeshStandardMaterial({ color: 0x78350f })
+    );
+    base.position.y = 0.7;
+    turretGroup.add(base);
+
+    const crystalTop = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.55),
+      new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0x854d0e })
+    );
+    crystalTop.position.y = 1.8;
+    turretGroup.add(crystalTop);
+
+    turretGroup.position.copy(playerGroup.position);
+    scene.add(turretGroup);
+    turrets.push({ mesh: turretGroup, cooldown: 0 });
+    say("🪵 Wood Auto-Turret built! It blasts nearby aliens automatically!");
+    updateHUD();
+  }
+
+  function gatherResource() {
+    for (let i = resources.length - 1; i >= 0; i--) {
+      const r = resources[i];
+      if (playerGroup.position.distanceTo(r.mesh.position) < 4.5) {
+        if (r.type === "gem") {
+          player.gems += 2;
+          say("💎 +2 Gems collected!");
+        } else {
+          player.wood += 3;
+          say("🪵 +3 Alien Wood collected!");
+        }
+        scene.remove(r.mesh);
+        resources.splice(i, 1);
+        spawnResource(r.type);
+        updateHUD();
+        return;
+      }
+    }
+    say("Move closer to Wood or Gems and press E!");
+  }
+
+  function craftMedkit() {
+    if (player.gems >= 3) {
+      player.gems -= 3;
+      player.medkits++;
+      say("💊 Crafted 1 Medkit!");
+      updateHUD();
+    } else {
+      say("Need 3 Gems 💎 to craft a Medkit!");
+    }
+  }
+
+  function useMedkit() {
+    if (player.medkits > 0 && player.hp < player.maxHp) {
+      player.medkits--;
+      player.hp = Math.min(player.maxHp, player.hp + 45);
+      say("❤️ Restored +45 HP!");
+      updateHUD();
+    } else {
+      say("No medkits available or HP already full!");
+    }
+  }
+
+  // --- SHOP & UPGRADES ---
+  function openShop() {
+    isPaused = true;
+    document.getElementById("shop-modal").style.display = "flex";
+    refreshShopUI();
+  }
+
+  function refreshShopUI() {
+    document.getElementById("shop-gems").textContent = `Available Gems: ${player.gems} 💎`;
+    document.getElementById("dmg-lvl").textContent = `Level ${upgrades.damage} (Damage: ${player.damage})`;
+    document.getElementById("spd-lvl").textContent = `Level ${upgrades.speed} (Speed: ${player.speed})`;
+    document.getElementById("hp-lvl").textContent = `Level ${upgrades.maxHp} (Max HP: ${player.maxHp})`;
+    document.getElementById("jmp-lvl").textContent = `Level ${upgrades.jump} (Jump: ${player.jumpPower})`;
+
+    ["damage", "speed", "maxHp", "jump"].forEach((key, idx) => {
+      const btnIds = ["btn-dmg", "btn-spd", "btn-hp", "btn-jmp"];
+      const btn = document.getElementById(btnIds[idx]);
+      btn.textContent = `Upgrade (${costs[key]} 💎)`;
+      btn.disabled = player.gems < costs[key];
+    });
+  }
+
+  function buyUpgrade(type) {
+    if (player.gems < costs[type]) return;
+    player.gems -= costs[type];
+    upgrades[type]++;
+    costs[type] += 2;
+
+    if (type === "damage") player.damage += 15;
+    if (type === "speed") player.speed += 3;
+    if (type === "maxHp") { player.maxHp += 30; player.hp = player.maxHp; }
+    if (type === "jump") player.jumpPower += 3;
+
+    refreshShopUI();
+    updateHUD();
+  }
+
+  function nextWave() {
+    document.getElementById("shop-modal").style.display = "none";
+    isPaused = false;
+    wave++;
+    spawnWave(wave);
+  }
+
+  function endGame(victory) {
+    gameEnded = true;
+    document.getElementById("gameover-modal").style.display = "flex";
+    document.getElementById("end-title").textContent = victory ? "🏆 VICTORY! BOSS DEFEATED!" : "💀 GAME OVER";
+    document.getElementById("end-desc").textContent = victory
+      ? "You defeated the Giant Cold Emoji Boss 🥶 and saved XENORA-7!"
+      : "The aliens were too strong. Upgrade your gear and try again!";
+  }
+
+  // --- KEYBOARD CONTROLS ---
+  window.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) e.preventDefault();
+    keys[k] = true;
+
+    if (e.repeat) return;
+    if (k === " " && player.onGround && !isPaused) {
+      player.vy = player.jumpPower;
+      player.onGround = false;
+    }
+    if (k === "f") playerShoot();
+    if (k === "e") gatherResource();
+    if (k === "t") buildTurret();
+    if (k === "h") useMedkit();
+  });
+
+  window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+  });
+
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // --- MAIN GAME LOOP ---
+  const clock = new THREE.Clock();
+  spawnWave(1);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.1);
+
+    if (!isPaused && !gameEnded) {
+      // Player movement
+      let moveX = 0, moveZ = 0;
+      if (keys["w"] || keys["arrowup"]) moveZ -= 1;
+      if (keys["s"] || keys["arrowdown"]) moveZ += 1;
+      if (keys["a"] || keys["arrowleft"]) moveX -= 1;
+      if (keys["d"] || keys["arrowright"]) moveX += 1;
+
+      if (moveX !== 0 || moveZ !== 0) {
+        const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
+        playerGroup.position.addScaledVector(moveVec, player.speed * dt);
+        player.facingAngle = Math.atan2(moveVec.x, moveVec.z);
+        playerGroup.rotation.y = player.facingAngle;
+      }
+
+      // Keep inside planet bounds
+      playerGroup.position.x = Math.max(-75, Math.min(75, playerGroup.position.x));
+      playerGroup.position.z = Math.max(-75, Math.min(75, playerGroup.position.z));
+
+      // Jumping & Gravity
+      playerGroup.position.y += player.vy * dt;
+      if (playerGroup.position.y > 0) {
+        player.vy -= 32 * dt;
+      } else {
+        playerGroup.position.y = 0;
+        player.vy = 0;
+        player.onGround = true;
+      }
+
+      // Rotate floating gems
+resources.forEach(r => {
+if (r.type === "gem") r.mesh.rotation.y += 2 * dt;
 });
-
-document.addEventListener("keyup",e=>{
- keys[e.key.toLowerCase()]=false;
+// Wood Turrets auto-fire at closest enemy
+turrets.forEach(t => {
+t.cooldown -= dt;
+if (t.cooldown <= 0 && enemies.length > 0) {
+let closest = null, bestDist = 28;
+enemies.forEach(en => {
+const d = t.mesh.position.distanceTo(en.mesh.position);
+if (d < bestDist) { bestDist = d; closest = en; }
 });
-
-function draw(){
- ctx.fillStyle="#382c4c";
- ctx.fillRect(0,0,700,500);
-
- // Alien ground
- for(let i=0;i<100;i++){
-  const x=(i*83)%700;
-  const y=(i*137)%500;
-  ctx.fillStyle="#49364f";
-  ctx.fillRect(x,y,15,8);
- }
-
- // Alien plants
- for(let i=0;i<25;i++){
-  const x=(i*127)%690;
-  const y=(i*97)%480;
-  ctx.fillStyle="#4d9b79";
-  ctx.fillRect(x,y,7,17);
-  ctx.fillStyle="#b64de1";
-  ctx.beginPath();
-  ctx.arc(x+3,y-3,5,0,Math.PI*2);
-  ctx.fill();
- }
-
- // Resources
- for(const r of resources){
-  ctx.fillStyle=r.type==="crystal"?"#45fff2":"#d2a65b";
-  ctx.beginPath();
-  ctx.arc(r.x,r.y,9,0,Math.PI*2);
-  ctx.fill();
- }
-
- // Enemies
- for(const e of enemies){
-  ctx.fillStyle="#a52f56";
-  ctx.beginPath();
-  ctx.arc(e.x,e.y,13,0,Math.PI*2);
-  ctx.fill();
-
-  ctx.fillStyle="#ff4444";
-  ctx.fillRect(e.x-7,e.y-4,4,4);
-  ctx.fillRect(e.x+4,e.y-4,4,4);
- }
-
- // Player
- ctx.fillStyle="#5affc5";
- ctx.beginPath();
- ctx.arc(player.x,player.y,12,0,Math.PI*2);
- ctx.fill();
-
- ctx.fillStyle="white";
- ctx.fillRect(player.x-4,player.y-4,3,3);
- ctx.fillRect(player.x+3,player.y-4,3,3);
-
- // World boundary
- ctx.strokeStyle="#69ffdb";
- ctx.lineWidth=3;
- ctx.strokeRect(2,2,696,496);
+if (closest) {
+const dir = closest.mesh.position.clone().sub(t.mesh.position).setY(0).normalize();
+shootLaser(t.mesh.position.clone().add(new THREE.Vector3(0, 1.8, 0)), dir, 18, 0xfacc15);
+t.cooldown = 0.9;
 }
-
-function update(dt){
- if(gameOver)return;
-
- const speed=170;
-
- if(keys.w||keys.arrowup)player.y-=speed*dt;
- if(keys.s||keys.arrowdown)player.y+=speed*dt;
- if(keys.a||keys.arrowleft)player.x-=speed*dt;
- if(keys.d||keys.arrowright)player.x+=speed*dt;
-
- player.x=Math.max(15,Math.min(685,player.x));
- player.y=Math.max(15,Math.min(485,player.y));
-
- // Hunger
- player.hunger-=dt*.7;
- if(player.hunger<=0){
-  player.hunger=0;
-  player.health-=dt*4;
- }
-
- // Enemy movement
- for(const e of enemies){
-  const dx=player.x-e.x;
-  const dy=player.y-e.y;
-  const d=Math.hypot(dx,dy)||1;
-
-  e.x+=dx/d*e.speed*dt;
-  e.y+=dy/d*e.speed*dt;
-
-  if(d<22){
-   player.health-=dt*12;
-  }
- }
-
- // New resources
- spawnTimer+=dt;
- if(spawnTimer>8){
-  spawnTimer=0;
-  if(resources.length<25)spawnResource();
- }
-
- player.health=Math.max(0,player.health);
- updateUI();
-
- if(player.health<=0){
-  gameOver=true;
-  say("YOU DIED ON XENORA-7!");
- }
 }
-
-function loop(time){
- const dt=Math.min((time-lastTime)/1000||0,0.05);
- lastTime=time;
-
- update(dt);
- draw();
-
- requestAnimationFrame(loop);
+});
+// Update Lasers & Hit Detection
+for (let i = lasers.length - 1; i >= 0; i--) {
+const l = lasers[i];
+l.mesh.position.addScaledVector(l.vel, dt);
+l.life -= dt;
+let hit = false;
+for (let j = enemies.length - 1; j >= 0; j--) {
+const en = enemies[j];
+const hitRadius = en.isBoss ? 3.6 : 1.6;
+if (l.mesh.position.distanceTo(en.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0))) < hitRadius) {
+en.hp -= l.damage;
+hit = true;
+if (en.hp <= 0) {
+scene.remove(en.mesh);
+enemies.splice(j, 1);
+player.gems += en.isBoss ? 25 : 2;
+say(en.isBoss ? "🥶 COLD BOSS DEFEATED! +25 Gems!" : "👽 Alien defeated! +2 Gems!");
+updateHUD();
+if (en.isBoss) endGame(true);
 }
-
-loadGame();
-updateUI();
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
+break;
+}
+}
+if (hit || l.life <= 0) {
+scene.remove(l.mesh);
+lasers.splice(i, 1);
+}
+}
+// Enemy Movement & Attacks
+enemies.forEach(en => {
+const toPlayer = playerGroup.position.clone().sub(en.mesh.position).setY(0);
+const dist = toPlayer.length();
+if (dist > 0.1) {
+toPlayer.normalize();
+en.mesh.position.addScaledVector(toPlayer, en.speed * dt);
+en.mesh.rotation.y = Math.atan2(toPlayer.x, toPlayer.z);
+}
+const attackRange = en.isBoss ? 3.8 : 1.8;
+if (dist < attackRange) {
+player.hp -= en.dmg * dt;
+updateHUD();
+if (player.hp <= 0) {
+player.hp = 0;
+updateHUD();
+endGame(false);
+}
+}
+});
+// Check Wave Cleared -> Open Upgrade Shop
+if (enemies.length === 0 && !gameEnded && wave <= maxNormalWaves) {
+openShop();
+}
+}
+// Smooth 3rd-Person Camera Follow
+const desiredCamPos = playerGroup.position.clone().add(new THREE.Vector3(0, 14, 18));
+camera.position.lerp(desiredCamPos, 0.1);
+camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
+renderer.render(scene, camera);
+}
+animate();
