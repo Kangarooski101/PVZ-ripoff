@@ -4,386 +4,227 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>👽 ALIEN FRONTIER 3D</title>
-  <script src="https://cloudflare.com"></script>
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
       margin: 0;
       overflow: hidden;
-      background: #0b0e17;
+      background: #0a0e1a;
       color: #fff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
     }
     #hud {
       position: absolute;
-      top: 15px;
-      left: 15px;
-      background: rgba(16, 24, 40, 0.85);
+      top: 14px;
+      left: 14px;
+      background: rgba(14, 22, 38, 0.88);
       border: 2px solid #55ffcf;
       border-radius: 10px;
-      padding: 14px 18px;
+      padding: 12px 16px;
       pointer-events: none;
-      box-shadow: 0 0 15px rgba(85, 255, 207, 0.25);
     }
     #hud h1 {
-      margin: 0 0 8px 0;
-      font-size: 20px;
+      margin: 0 0 6px 0;
+      font-size: 19px;
       color: #55ffcf;
       letter-spacing: 2px;
     }
-    .stat-row {
-      font-size: 15px;
-      margin: 4px 0;
-      font-weight: bold;
-    }
-    #status {
-      color: #ffe38c;
-      font-size: 14px;
-      margin-top: 8px;
-      min-height: 20px;
-    }
+    .stat { font-size: 14px; margin: 4px 0; font-weight: bold; }
+    #status { color: #ffe38c; font-size: 13px; margin-top: 6px; }
     #controls {
       position: absolute;
-      bottom: 15px;
-      left: 15px;
-      background: rgba(16, 24, 40, 0.85);
+      bottom: 14px;
+      left: 14px;
+      background: rgba(14, 22, 38, 0.88);
       border: 1px solid #55ffcf;
       border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
+      padding: 8px 12px;
+      font-size: 12px;
       color: #b8f2e6;
       pointer-events: none;
     }
-    #action-bar {
+    #actions {
       position: absolute;
-      bottom: 15px;
-      right: 15px;
+      bottom: 14px;
+      right: 14px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
     button {
       background: #17685e;
       color: white;
       border: 2px solid #55ffcf;
       border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 14px;
+      padding: 9px 14px;
+      font-size: 13px;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.15s;
     }
-    button:hover:not(:disabled) {
-      background: #239b89;
-      transform: translateY(-2px);
-    }
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-    #crosshair {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 18px;
-      height: 18px;
-      transform: translate(-50%, -50%);
-      border: 2px solid rgba(85, 255, 207, 0.8);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    #shop-modal, #gameover-modal {
+    button:hover:not(:disabled) { background: #219c86; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    #shop-modal, #end-modal {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(5, 8, 15, 0.85);
+      background: rgba(5, 8, 16, 0.85);
       align-items: center;
       justify-content: center;
       z-index: 20;
     }
-    .modal-box {
+    .box {
       background: #141e33;
       border: 3px solid #55ffcf;
-      border-radius: 14px;
-      padding: 25px;
-      width: min(92vw, 520px);
+      border-radius: 12px;
+      padding: 22px;
+      width: min(92vw, 480px);
       text-align: center;
-      box-shadow: 0 0 30px rgba(85, 255, 207, 0.4);
     }
-    .modal-box h2 {
-      color: #55ffcf;
-      margin-top: 0;
-      letter-spacing: 1.5px;
-    }
-    .upgrade-grid {
+    .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin: 18px 0;
+      gap: 10px;
+      margin: 15px 0;
     }
-    .upgrade-card {
+    .card {
       background: #1c2945;
       border: 1px solid #3c8c7e;
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px;
     }
-    .upgrade-card h4 { margin: 0 0 6px 0; color: #8dffdf; }
-    .upgrade-card p { margin: 0 0 10px 0; font-size: 13px; color: #ccc; }
+    .card h4 { margin: 0 0 5px 0; color: #8dffdf; }
+    .card p { margin: 0 0 8px 0; font-size: 12px; color: #ccc; }
   </style>
 </head>
 <body>
+  <canvas id="gameCanvas"></canvas>
 
   <div id="hud">
     <h1>👽 ALIEN FRONTIER 3D</h1>
-    <div class="stat-row" id="wave-info">🌊 Wave: 1 / 5</div>
-    <div class="stat-row" id="stats">❤️ HP: 100/100 | 🛡️ Turrets: 0</div>
-    <div class="stat-row" id="inventory">💎 Gems: 0 | 🪵 Wood: 0 | 💊 Medkits: 0</div>
-    <div id="status">Defeat all 3D Aliens! Gather Wood & Gems!</div>
+    <div class="stat" id="wave-info">🌊 Wave: 1 / 5</div>
+    <div class="stat" id="stats">❤️ HP: 100/100 | 🛡️ Turrets: 0</div>
+    <div class="stat" id="inventory">💎 Gems: 0 | 🪵 Wood: 5 | 💊 Medkits: 1</div>
+    <div id="status">Run with WASD, Jump with SPACE, Shoot with F!</div>
   </div>
-
-  <div id="crosshair"></div>
 
   <div id="controls">
     <b>WASD / Arrows</b> = Run &nbsp;|&nbsp;
     <b>SPACE</b> = Jump &nbsp;|&nbsp;
-    <b>F</b> = Shoot Laser &nbsp;|&nbsp;
-    <b>E</b> = Gather Wood/Gems &nbsp;|&nbsp;
-    <b>T</b> = Build Wood Turret (5 Wood) &nbsp;|&nbsp;
+    <b>F</b> = Shoot &nbsp;|&nbsp;
+    <b>E</b> = Gather &nbsp;|&nbsp;
+    <b>T</b> = Wood Turret (5 Wood) &nbsp;|&nbsp;
     <b>H</b> = Heal
   </div>
 
-  <div id="action-bar">
+  <div id="actions">
     <button onclick="buildTurret()">🪵 Build Turret (5 Wood)</button>
     <button onclick="craftMedkit()">💊 Craft Medkit (3 Gems)</button>
-    <button onclick="useMedkit()">❤️ Use Medkit [H]</button>
+    <button onclick="useMedkit()">❤️ Heal [H]</button>
   </div>
 
-  <!-- Between-Wave Upgrade Shop -->
   <div id="shop-modal">
-    <div class="modal-box">
-      <h2>🛒 WAVE CLEARED — UPGRADE SHOP</h2>
+    <div class="box">
+      <h2 style="color:#55ffcf; margin-top:0;">🛒 WAVE CLEARED — UPGRADE SHOP</h2>
       <p id="shop-gems" style="color:#8dffdf; font-weight:bold;">Available Gems: 0 💎</p>
-      <div class="upgrade-grid">
-        <div class="upgrade-card">
-          <h4>🔫 Blaster Damage</h4>
-          <p id="dmg-lvl">Level 1 (Damage: 25)</p>
+      <div class="grid">
+        <div class="card">
+          <h4>🔫 Blaster Power</h4>
+          <p id="dmg-txt">Lvl 1 (Damage: 25)</p>
           <button id="btn-dmg" onclick="buyUpgrade('damage')">Upgrade (3 💎)</button>
         </div>
-        <div class="upgrade-card">
-          <h4>⚡ Turbo Boots</h4>
-          <p id="spd-lvl">Level 1 (Speed: 14)</p>
+        <div class="card">
+          <h4>⚡ Sprint Boots</h4>
+          <p id="spd-txt">Lvl 1 (Speed: 16)</p>
           <button id="btn-spd" onclick="buyUpgrade('speed')">Upgrade (3 💎)</button>
         </div>
-        <div class="upgrade-card">
-          <h4>❤️ Exo-Armor Max HP</h4>
-          <p id="hp-lvl">Level 1 (Max HP: 100)</p>
+        <div class="card">
+          <h4>❤️ Exo-Armor HP</h4>
+          <p id="hp-txt">Lvl 1 (Max HP: 100)</p>
           <button id="btn-hp" onclick="buyUpgrade('maxHp')">Upgrade (3 💎)</button>
         </div>
-        <div class="upgrade-card">
-          <h4>🚀 Jump Thrusters</h4>
-          <p id="jmp-lvl">Level 1 (Jump: 14)</p>
+        <div class="card">
+          <h4>🚀 Jump Boost</h4>
+          <p id="jmp-txt">Lvl 1 (Jump: 16)</p>
           <button id="btn-jmp" onclick="buyUpgrade('jump')">Upgrade (3 💎)</button>
         </div>
       </div>
-      <button style="background:#219c86; width:100%; font-size:16px;" onclick="nextWave()">
-        ▶ START NEXT WAVE
-      </button>
+      <button style="width:100%; background:#219c86; font-size:15px;" onclick="nextWave()">▶ START NEXT WAVE</button>
     </div>
   </div>
 
-  <!-- Game Over / Victory Modal -->
-  <div id="gameover-modal">
-    <div class="modal-box">
-      <h2 id="end-title">💀 GAME OVER</h2>
+  <div id="end-modal">
+    <div class="box">
+      <h2 id="end-title" style="color:#55ffcf;">💀 GAME OVER</h2>
       <p id="end-desc">The aliens overwhelmed XENORA-7.</p>
       <button onclick="location.reload()">🔄 Play Again</button>
     </div>
   </div>
 <script>
-  // --- THREE.JS SCENE SETUP ---
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0d1326);
-  scene.fog = new THREE.FogExp2(0x0d1326, 0.012);
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
 
-  const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 300);
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  document.body.appendChild(renderer.domElement);
-
-  // Lights
-  const ambientLight = new THREE.AmbientLight(0x667799, 1.1);
-  scene.add(ambientLight);
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-  dirLight.position.set(30, 50, 25);
-  dirLight.castShadow = true;
-  scene.add(dirLight);
-
-  // Alien Planet Ground
-  const groundGeo = new THREE.PlaneGeometry(160, 160);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0x241d38, roughness: 0.85 });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  const gridHelper = new THREE.GridHelper(160, 40, 0x55ffcf, 0x2f264a);
-  scene.add(gridHelper);
-
-  // --- PLAYER 3D CHARACTER ---
-  const playerGroup = new THREE.Group();
-  const bodyMesh = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.6, 0.6, 1.6, 16),
-    new THREE.MeshStandardMaterial({ color: 0x3b82f6 })
-  );
-  bodyMesh.position.y = 0.8;
-  playerGroup.add(bodyMesh);
-
-  const headMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.55, 16, 16),
-    new THREE.MeshStandardMaterial({ color: 0x93c5fd })
-  );
-  headMesh.position.y = 1.9;
-  playerGroup.add(headMesh);
-
-  const gunMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(0.25, 0.25, 1.1),
-    new THREE.MeshStandardMaterial({ color: 0x55ffcf })
-  );
-  gunMesh.position.set(0.65, 1.2, 0.4);
-  playerGroup.add(gunMesh);
-
-  scene.add(playerGroup);
-
-  // --- 3D ALIEN EMOJI BUILDER (👽) ---
-  function createAlienEmojiMesh() {
-    const group = new THREE.Group();
-
-    // Alien green head (scaled sphere to look like classic 👽 upside-down teardrop)
-    const headGeo = new THREE.SphereGeometry(1.1, 24, 24);
-    headGeo.scale(0.95, 1.25, 0.8);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x5ce65c, roughness: 0.35 });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.5;
-    group.add(head);
-
-    // Big glossy black slanted alien eyes
-    const eyeGeo = new THREE.SphereGeometry(0.36, 16, 16);
-    eyeGeo.scale(0.65, 1.25, 0.35);
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1 });
-
-    const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-    leftEye.position.set(-0.42, 1.55, 0.72);
-    leftEye.rotation.set(-0.15, -0.35, -0.45);
-    group.add(leftEye);
-
-    const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-    rightEye.position.set(0.42, 1.55, 0.72);
-    rightEye.rotation.set(-0.15, 0.35, 0.45);
-    group.add(rightEye);
-
-    // Subtle alien mouth slit
-    const mouth = new THREE.Mesh(
-      new THREE.BoxGeometry(0.32, 0.06, 0.1),
-      new THREE.MeshBasicMaterial({ color: 0x1b4d1b })
-    );
-    mouth.position.set(0, 0.85, 0.82);
-    group.add(mouth);
-
-    return group;
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   }
+  window.addEventListener("resize", resize);
+  resize();
 
-  // --- 3D COLD EMOJI BLUE GUY BOSS BUILDER (🥶) ---
-  function createColdBossMesh() {
-    const group = new THREE.Group();
+  // Built-in 3D Perspective Camera Projector (Zero external libraries needed!)
+  const cam = { x: 0, y: 18, z: 24, fov: 520 };
 
-    // Giant icy blue head
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(3.2, 32, 32),
-      new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.25 })
-    );
-    head.position.y = 3.5;
-    group.add(head);
+  function project3D(wx, wy, wz) {
+    const dx = wx - cam.x;
+    const dy = wy - cam.y;
+    const dz = wz - cam.z;
 
-    // Frosty white crown / ice cap on top
-    const iceCap = new THREE.Mesh(
-      new THREE.ConeGeometry(2.6, 1.8, 12),
-      new THREE.MeshStandardMaterial({ color: 0xe0f2fe, roughness: 0.2 })
-    );
-    iceCap.position.y = 6.5;
-    group.add(iceCap);
+    // Camera pitch angle (looking down at 34 degrees)
+    const pitch = 0.58;
+    const cosP = Math.cos(pitch);
+    const sinP = Math.sin(pitch);
 
-    // Shivering wide eyes
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+    const ry = dy * cosP - dz * sinP;
+    const rz = dy * sinP + dz * cosP;
 
-    [-1.1, 1.1].forEach(xPos => {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 16), eyeMat);
-      eye.position.set(xPos, 4.1, 2.75);
-      group.add(eye);
-
-      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), pupilMat);
-      pupil.position.set(xPos, 4.1, 3.3);
-      group.add(pupil);
-    });
-
-    // Chattering teeth mouth (🥶)
-    const mouthBg = new THREE.Mesh(
-      new THREE.BoxGeometry(2.4, 0.85, 0.4),
-      new THREE.MeshBasicMaterial({ color: 0x0c4a6e })
-    );
-    mouthBg.position.set(0, 2.3, 2.95);
-    group.add(mouthBg);
-
-    for (let i = -0.9; i <= 0.9; i += 0.45) {
-      const tooth = new THREE.Mesh(
-        new THREE.BoxGeometry(0.32, 0.7, 0.45),
-        new THREE.MeshBasicMaterial({ color: 0xffffff })
-      );
-      tooth.position.set(i, 2.3, 3.0);
-      group.add(tooth);
-    }
-
-    // Hanging icicles on chin
-    [-1.2, 0, 1.2].forEach(xPos => {
-      const icicle = new THREE.Mesh(
-        new THREE.ConeGeometry(0.35, 1.5, 8),
-        new THREE.MeshStandardMaterial({ color: 0xbae6fd })
-      );
-      icicle.rotation.x = Math.PI;
-      icicle.position.set(xPos, 0.8, 2.2);
-      group.add(icicle);
-    });
-
-    return group;
+    if (rz >= -0.5) return null; // Behind camera
+    const scale = cam.fov / -rz;
+    return {
+      x: canvas.width * 0.5 + dx * scale,
+      y: canvas.height * 0.5 - ry * scale,
+      scale: scale,
+      depth: -rz
+    };
   }
-  // --- GAME STATE & VARIABLES ---
   const player = {
+    x: 0, y: 0, z: 0,
+    vy: 0,
+    onGround: true,
+    facing: 0,
     hp: 100,
     maxHp: 100,
-    speed: 14,
-    jumpPower: 14,
+    speed: 16,
+    jump: 16,
     damage: 25,
     gems: 0,
     wood: 5,
-    medkits: 1,
-    vy: 0,
-    onGround: true,
-    facingAngle: 0
+    medkits: 1
   };
 
   const upgrades = { damage: 1, speed: 1, maxHp: 1, jump: 1 };
   const costs = { damage: 3, speed: 3, maxHp: 3, jump: 3 };
 
   let wave = 1;
-  const maxNormalWaves = 4; // Wave 5 is the Cold Boss!
+  const maxNormalWaves = 4; // Wave 5 is Cold Emoji Boss!
   let enemies = [];
   let resources = [];
   let lasers = [];
   let turrets = [];
   let isPaused = false;
   let gameEnded = false;
-
   const keys = {};
 
   function say(msg) {
@@ -391,63 +232,52 @@
   }
 
   function updateHUD() {
-    const waveLabel = wave > maxNormalWaves ? "❄️ BOSS WAVE: COLD GUY 🥶" : `🌊 Wave: ${wave} / ${maxNormalWaves + 1}`;
-    document.getElementById("wave-info").textContent = waveLabel;
+    document.getElementById("wave-info").textContent =
+      wave > maxNormalWaves ? "❄️ BOSS WAVE: COLD GUY 🥶" : `🌊 Wave: ${wave} / 5`;
     document.getElementById("stats").textContent =
       `❤️ HP: ${Math.ceil(player.hp)}/${player.maxHp} | 🛡️ Wood Turrets: ${turrets.length}`;
     document.getElementById("inventory").textContent =
       `💎 Gems: ${player.gems} | 🪵 Wood: ${player.wood} | 💊 Medkits: ${player.medkits}`;
   }
-
-  // --- SPAWN WOOD & GEMS ---
   function spawnResource(type) {
-    const isGem = type === "gem";
-    const mesh = isGem
-      ? new THREE.Mesh(
-          new THREE.OctahedronGeometry(0.75),
-          new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x006688 })
-        )
-      : new THREE.Mesh(
-          new THREE.CylinderGeometry(0.45, 0.55, 1.8, 8),
-          new THREE.MeshStandardMaterial({ color: 0x92400e })
-        );
-
-    mesh.position.set(
-      (Math.random() - 0.5) * 120,
-      isGem ? 1.0 : 0.9,
-      (Math.random() - 0.5) * 120
-    );
-    scene.add(mesh);
-    resources.push({ mesh, type });
+    resources.push({
+      x: (Math.random() - 0.5) * 90,
+      y: 0,
+      z: (Math.random() - 0.5) * 90,
+      type: type
+    });
   }
 
   for (let i = 0; i < 14; i++) spawnResource("wood");
   for (let i = 0; i < 10; i++) spawnResource("gem");
 
-  // --- SPAWN WAVES & BOSS ---
   function spawnWave(waveNum) {
     if (waveNum <= maxNormalWaves) {
       const count = 4 + waveNum * 2;
       const hp = 40 + (waveNum - 1) * 30;
       const speed = 5.5 + (waveNum - 1) * 1.6;
-      const dmg = 10 + (waveNum - 1) * 6;
+      const dmg = 12 + (waveNum - 1) * 6;
 
       for (let i = 0; i < count; i++) {
-        const mesh = createAlienEmojiMesh();
-        const angle = (Math.PI * 2 * i) / count;
-        const radius = 38 + Math.random() * 18;
-        mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-        scene.add(mesh);
-        enemies.push({ mesh, hp, maxHp: hp, speed, dmg, isBoss: false });
+        const ang = (Math.PI * 2 * i) / count;
+        const rad = 32 + Math.random() * 14;
+        enemies.push({
+          x: Math.cos(ang) * rad,
+          y: 0,
+          z: Math.sin(ang) * rad,
+          hp: hp,
+          maxHp: hp,
+          speed: speed,
+          dmg: dmg,
+          isBoss: false
+        });
       }
       say(`Wave ${waveNum} started! Aliens are faster and stronger!`);
     } else {
-      // BOSS WAVE: Cold Emoji Blue Guy 🥶
-      const bossMesh = createColdBossMesh();
-      bossMesh.position.set(0, 0, -45);
-      scene.add(bossMesh);
       enemies.push({
-        mesh: bossMesh,
+        x: 0,
+        y: 0,
+        z: -38,
         hp: 650,
         maxHp: 650,
         speed: 8.5,
@@ -458,31 +288,17 @@
     }
     updateHUD();
   }
-
-  // --- SHOOTING LASER (F KEY) ---
-  function shootLaser(origin, dirVector, damage, color = 0x55ffcf) {
-    const laser = new THREE.Mesh(
-      new THREE.SphereGeometry(0.3, 8, 8),
-      new THREE.MeshBasicMaterial({ color })
-    );
-    laser.position.copy(origin);
-    scene.add(laser);
-    lasers.push({
-      mesh: laser,
-      vel: dirVector.clone().multiplyScalar(48),
-      damage,
-      life: 1.5
-    });
+  function shootLaser(x, y, z, vx, vz, dmg, color) {
+    lasers.push({ x, y, z, vx, vz, dmg, color, life: 1.4 });
   }
 
   function playerShoot() {
     if (isPaused || gameEnded) return;
-    const dir = new THREE.Vector3(Math.sin(player.facingAngle), 0, Math.cos(player.facingAngle)).normalize();
-    const startPos = playerGroup.position.clone().add(new THREE.Vector3(0, 1.3, 0));
-    shootLaser(startPos, dir, player.damage, 0x55ffcf);
+    const vx = Math.sin(player.facing) * 48;
+    const vz = Math.cos(player.facing) * 48;
+    shootLaser(player.x, player.y + 1.4, player.z, vx, vz, player.damage, "#55ffcf");
   }
 
-  // --- WOOD UTILITY: BUILD AUTO-TURRETS & BARRICADES ---
   function buildTurret() {
     if (isPaused || gameEnded) return;
     if (player.wood < 5) {
@@ -490,33 +306,15 @@
       return;
     }
     player.wood -= 5;
-
-    const turretGroup = new THREE.Group();
-    const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.8, 1.0, 1.4, 8),
-      new THREE.MeshStandardMaterial({ color: 0x78350f })
-    );
-    base.position.y = 0.7;
-    turretGroup.add(base);
-
-    const crystalTop = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.55),
-      new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0x854d0e })
-    );
-    crystalTop.position.y = 1.8;
-    turretGroup.add(crystalTop);
-
-    turretGroup.position.copy(playerGroup.position);
-    scene.add(turretGroup);
-    turrets.push({ mesh: turretGroup, cooldown: 0 });
-    say("🪵 Wood Auto-Turret built! It blasts nearby aliens automatically!");
+    turrets.push({ x: player.x, y: 0, z: player.z, cooldown: 0 });
+    say("🪵 Wood Auto-Turret built! It blasts nearby aliens!");
     updateHUD();
   }
 
   function gatherResource() {
     for (let i = resources.length - 1; i >= 0; i--) {
       const r = resources[i];
-      if (playerGroup.position.distanceTo(r.mesh.position) < 4.5) {
+      if (Math.hypot(player.x - r.x, player.z - r.z) < 4.5) {
         if (r.type === "gem") {
           player.gems += 2;
           say("💎 +2 Gems collected!");
@@ -524,7 +322,6 @@
           player.wood += 3;
           say("🪵 +3 Alien Wood collected!");
         }
-        scene.remove(r.mesh);
         resources.splice(i, 1);
         spawnResource(r.type);
         updateHUD();
@@ -555,24 +352,27 @@
       say("No medkits available or HP already full!");
     }
   }
-
-  // --- SHOP & UPGRADES ---
   function openShop() {
     isPaused = true;
     document.getElementById("shop-modal").style.display = "flex";
-    refreshShopUI();
+    refreshShop();
   }
 
-  function refreshShopUI() {
+  function refreshShop() {
     document.getElementById("shop-gems").textContent = `Available Gems: ${player.gems} 💎`;
-    document.getElementById("dmg-lvl").textContent = `Level ${upgrades.damage} (Damage: ${player.damage})`;
-    document.getElementById("spd-lvl").textContent = `Level ${upgrades.speed} (Speed: ${player.speed})`;
-    document.getElementById("hp-lvl").textContent = `Level ${upgrades.maxHp} (Max HP: ${player.maxHp})`;
-    document.getElementById("jmp-lvl").textContent = `Level ${upgrades.jump} (Jump: ${player.jumpPower})`;
+    document.getElementById("dmg-txt").textContent = `Lvl ${upgrades.damage} (Damage: ${player.damage})`;
+    document.getElementById("spd-txt").textContent = `Lvl ${upgrades.speed} (Speed: ${player.speed})`;
+    document.getElementById("hp-txt").textContent = `Lvl ${upgrades.maxHp} (Max HP: ${player.maxHp})`;
+    document.getElementById("jmp-txt").textContent = `Lvl ${upgrades.jump} (Jump: ${player.jump})`;
 
-    ["damage", "speed", "maxHp", "jump"].forEach((key, idx) => {
-      const btnIds = ["btn-dmg", "btn-spd", "btn-hp", "btn-jmp"];
-      const btn = document.getElementById(btnIds[idx]);
+    const map = [
+      ["damage", "btn-dmg"],
+      ["speed", "btn-spd"],
+      ["maxHp", "btn-hp"],
+      ["jump", "btn-jmp"]
+    ];
+    map.forEach(([key, id]) => {
+      const btn = document.getElementById(id);
       btn.textContent = `Upgrade (${costs[key]} 💎)`;
       btn.disabled = player.gems < costs[key];
     });
@@ -587,9 +387,9 @@
     if (type === "damage") player.damage += 15;
     if (type === "speed") player.speed += 3;
     if (type === "maxHp") { player.maxHp += 30; player.hp = player.maxHp; }
-    if (type === "jump") player.jumpPower += 3;
+    if (type === "jump") player.jump += 3;
 
-    refreshShopUI();
+    refreshShop();
     updateHUD();
   }
 
@@ -600,24 +400,23 @@
     spawnWave(wave);
   }
 
-  function endGame(victory) {
+  function endGame(win) {
     gameEnded = true;
-    document.getElementById("gameover-modal").style.display = "flex";
-    document.getElementById("end-title").textContent = victory ? "🏆 VICTORY! BOSS DEFEATED!" : "💀 GAME OVER";
-    document.getElementById("end-desc").textContent = victory
+    document.getElementById("end-modal").style.display = "flex";
+    document.getElementById("end-title").textContent = win ? "🏆 VICTORY! COLD BOSS DEFEATED!" : "💀 GAME OVER";
+    document.getElementById("end-desc").textContent = win
       ? "You defeated the Giant Cold Emoji Boss 🥶 and saved XENORA-7!"
       : "The aliens were too strong. Upgrade your gear and try again!";
   }
 
-  // --- KEYBOARD CONTROLS ---
   window.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
     if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) e.preventDefault();
     keys[k] = true;
-
     if (e.repeat) return;
+
     if (k === " " && player.onGround && !isPaused) {
-      player.vy = player.jumpPower;
+      player.vy = player.jump;
       player.onGround = false;
     }
     if (k === "f") playerShoot();
@@ -626,130 +425,209 @@
     if (k === "h") useMedkit();
   });
 
-  window.addEventListener("keyup", e => {
-    keys[e.key.toLowerCase()] = false;
-  });
+  window.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+  function drawGroundGrid() {
+    ctx.fillStyle = "#161229";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
+    ctx.strokeStyle = "rgba(85, 255, 207, 0.22)";
+    ctx.lineWidth = 1;
+    for (let i = -50; i <= 50; i += 10) {
+      const a1 = project3D(i, 0, -50), a2 = project3D(i, 0, 50);
+      if (a1 && a2) { ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y); ctx.stroke(); }
+      const b1 = project3D(-50, 0, i), b2 = project3D(50, 0, i);
+      if (b1 && b2) { ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke(); }
+    }
+  }
 
-  // --- MAIN GAME LOOP ---
-  const clock = new THREE.Clock();
-  spawnWave(1);
+  function renderScene() {
+    drawGroundGrid();
 
-  function animate() {
-    requestAnimationFrame(animate);
-    const dt = Math.min(clock.getDelta(), 0.1);
+    // Collect all 3D objects and sort back-to-front by camera depth
+    const renderList = [];
 
-    if (!isPaused && !gameEnded) {
-      // Player movement
-      let moveX = 0, moveZ = 0;
-      if (keys["w"] || keys["arrowup"]) moveZ -= 1;
-      if (keys["s"] || keys["arrowdown"]) moveZ += 1;
-      if (keys["a"] || keys["arrowleft"]) moveX -= 1;
-      if (keys["d"] || keys["arrowright"]) moveX += 1;
+    resources.forEach(r => renderList.push({ kind: "res", obj: r, x: r.x, y: 0.8, z: r.z }));
+    turrets.forEach(t => renderList.push({ kind: "turret", obj: t, x: t.x, y: 1.0, z: t.z }));
+    enemies.forEach(e => renderList.push({ kind: "enemy", obj: e, x: e.x, y: e.isBoss ? 3.2 : 1.5, z: e.z }));
+    lasers.forEach(l => renderList.push({ kind: "laser", obj: l, x: l.x, y: l.y, z: l.z }));
+    renderList.push({ kind: "player", obj: player, x: player.x, y: player.y + 1.2, z: player.z });
 
-      if (moveX !== 0 || moveZ !== 0) {
-        const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
-        playerGroup.position.addScaledVector(moveVec, player.speed * dt);
-        player.facingAngle = Math.atan2(moveVec.x, moveVec.z);
-        playerGroup.rotation.y = player.facingAngle;
+    renderList.forEach(item => { item.proj = project3D(item.x, item.y, item.z); });
+    renderList.filter(i => i.proj !== null).sort((a, b) => b.proj.depth - a.proj.depth).forEach(item => {
+      const p = item.proj;
+      const s = p.scale;
+
+      // Ground shadow
+      const sh = project3D(item.x, 0, item.z);
+      if (sh) {
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.beginPath();
+        ctx.ellipse(sh.x, sh.y, 1.1 * s, 0.55 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      // Keep inside planet bounds
-      playerGroup.position.x = Math.max(-75, Math.min(75, playerGroup.position.x));
-      playerGroup.position.z = Math.max(-75, Math.min(75, playerGroup.position.z));
+      if (item.kind === "res") {
+        ctx.font = `${Math.max(14, 1.8 * s)}px Arial`;
+        ctx.textAlign = "center";
+        ctx.fillText(item.obj.type === "gem" ? "💎" : "🪵", p.x, p.y);
+      } else if (item.kind === "turret") {
+        ctx.fillStyle = "#92400e";
+        ctx.fillRect(p.x - 0.8 * s, p.y - 0.6 * s, 1.6 * s, 1.4 * s);
+        ctx.fillStyle = "#facc15";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y - 0.9 * s, 0.55 * s, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (item.kind === "laser") {
+        ctx.fillStyle = item.obj.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(3, 0.35 * s), 0, Math.PI * 2);
+        ctx.fill();
+      } else if (item.kind === "player") {
+        // 3D Astronaut Suit
+        ctx.fillStyle = "#3b82f6";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.0 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#93c5fd";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y - 0.9 * s, 0.65 * s, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (item.kind === "enemy") {
+        const en = item.obj;
+        const size = en.isBoss ? 5.2 * s : 2.5 * s;
+        // 3D Glowing Aura + Crisp Alien / Cold Emoji
+        ctx.fillStyle = en.isBoss ? "rgba(56, 189, 248, 0.35)" : "rgba(92, 230, 92, 0.25)";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size * 0.62, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Jumping & Gravity
-      playerGroup.position.y += player.vy * dt;
-      if (playerGroup.position.y > 0) {
-        player.vy -= 32 * dt;
+        ctx.font = `${Math.max(18, size)}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(en.isBoss ? "🥶" : "👽", p.x, p.y);
+
+        // HP Bar above enemy
+        const barW = en.isBoss ? 4.5 * s : 1.8 * s;
+        ctx.fillStyle = "#333";
+        ctx.fillRect(p.x - barW / 2, p.y - size * 0.75, barW, 5);
+        ctx.fillStyle = en.isBoss ? "#38bdf8" : "#ff4d4d";
+        ctx.fillRect(p.x - barW / 2, p.y - size * 0.75, barW * (en.hp / en.maxHp), 5);
+      }
+    });
+  }
+  let lastTime = performance.now();
+  spawnWave(1);
+
+  function gameLoop(now) {
+    requestAnimationFrame(gameLoop);
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+
+    if (!isPaused && !gameEnded) {
+      let mx = 0, mz = 0;
+      if (keys["w"] || keys["arrowup"]) mz -= 1;
+      if (keys["s"] || keys["arrowdown"]) mz += 1;
+      if (keys["a"] || keys["arrowleft"]) mx -= 1;
+      if (keys["d"] || keys["arrowright"]) mx += 1;
+
+      if (mx !== 0 || mz !== 0) {
+        const len = Math.hypot(mx, mz);
+        mx /= len; mz /= len;
+        player.x += mx * player.speed * dt;
+        player.z += mz * player.speed * dt;
+        player.facing = Math.atan2(mx, mz);
+      }
+
+      player.x = Math.max(-48, Math.min(48, player.x));
+      player.z = Math.max(-48, Math.min(48, player.z));
+
+      // Jump & Gravity
+      player.y += player.vy * dt;
+      if (player.y > 0) {
+        player.vy -= 34 * dt;
       } else {
-        playerGroup.position.y = 0;
+        player.y = 0;
         player.vy = 0;
         player.onGround = true;
       }
 
-      // Rotate floating gems
-resources.forEach(r => {
-if (r.type === "gem") r.mesh.rotation.y += 2 * dt;
-});
-// Wood Turrets auto-fire at closest enemy
-turrets.forEach(t => {
-t.cooldown -= dt;
-if (t.cooldown <= 0 && enemies.length > 0) {
-let closest = null, bestDist = 28;
-enemies.forEach(en => {
-const d = t.mesh.position.distanceTo(en.mesh.position);
-if (d < bestDist) { bestDist = d; closest = en; }
-});
-if (closest) {
-const dir = closest.mesh.position.clone().sub(t.mesh.position).setY(0).normalize();
-shootLaser(t.mesh.position.clone().add(new THREE.Vector3(0, 1.8, 0)), dir, 18, 0xfacc15);
-t.cooldown = 0.9;
-}
-}
-});
-// Update Lasers & Hit Detection
-for (let i = lasers.length - 1; i >= 0; i--) {
-const l = lasers[i];
-l.mesh.position.addScaledVector(l.vel, dt);
-l.life -= dt;
-let hit = false;
-for (let j = enemies.length - 1; j >= 0; j--) {
-const en = enemies[j];
-const hitRadius = en.isBoss ? 3.6 : 1.6;
-if (l.mesh.position.distanceTo(en.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0))) < hitRadius) {
-en.hp -= l.damage;
-hit = true;
-if (en.hp <= 0) {
-scene.remove(en.mesh);
-enemies.splice(j, 1);
-player.gems += en.isBoss ? 25 : 2;
-say(en.isBoss ? "🥶 COLD BOSS DEFEATED! +25 Gems!" : "👽 Alien defeated! +2 Gems!");
-updateHUD();
-if (en.isBoss) endGame(true);
-}
-break;
-}
-}
-if (hit || l.life <= 0) {
-scene.remove(l.mesh);
-lasers.splice(i, 1);
-}
-}
-// Enemy Movement & Attacks
-enemies.forEach(en => {
-const toPlayer = playerGroup.position.clone().sub(en.mesh.position).setY(0);
-const dist = toPlayer.length();
-if (dist > 0.1) {
-toPlayer.normalize();
-en.mesh.position.addScaledVector(toPlayer, en.speed * dt);
-en.mesh.rotation.y = Math.atan2(toPlayer.x, toPlayer.z);
-}
-const attackRange = en.isBoss ? 3.8 : 1.8;
-if (dist < attackRange) {
-player.hp -= en.dmg * dt;
-updateHUD();
-if (player.hp <= 0) {
-player.hp = 0;
-updateHUD();
-endGame(false);
-}
-}
-});
-// Check Wave Cleared -> Open Upgrade Shop
-if (enemies.length === 0 && !gameEnded && wave <= maxNormalWaves) {
-openShop();
-}
-}
-// Smooth 3rd-Person Camera Follow
-const desiredCamPos = playerGroup.position.clone().add(new THREE.Vector3(0, 14, 18));
-camera.position.lerp(desiredCamPos, 0.1);
-camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
-renderer.render(scene, camera);
-}
-animate();
+      // Wood Turrets Auto-Fire
+      turrets.forEach(t => {
+        t.cooldown -= dt;
+        if (t.cooldown <= 0 && enemies.length > 0) {
+          let target = null, best = 26;
+          enemies.forEach(en => {
+            const d = Math.hypot(en.x - t.x, en.z - t.z);
+            if (d < best) { best = d; target = en; }
+          });
+          if (target) {
+            const ang = Math.atan2(target.x - t.x, target.z - t.z);
+            shootLaser(t.x, 1.4, t.z, Math.sin(ang) * 42, Math.cos(ang) * 42, 18, "#facc15");
+            t.cooldown = 0.85;
+          }
+        }
+      });
+
+      // Lasers & Hits
+      for (let i = lasers.length - 1; i >= 0; i--) {
+        const l = lasers[i];
+        l.x += l.vx * dt;
+        l.z += l.vz * dt;
+        l.life -= dt;
+
+        let hit = false;
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const en = enemies[j];
+          const hitDist = en.isBoss ? 3.5 : 1.7;
+          if (Math.hypot(l.x - en.x, l.z - en.z) < hitDist) {
+            en.hp -= l.dmg;
+            hit = true;
+            if (en.hp <= 0) {
+              enemies.splice(j, 1);
+              player.gems += en.isBoss ? 25 : 2;
+              say(en.isBoss ? "🥶 COLD BOSS DEFEATED! +25 Gems!" : "👽 Alien defeated! +2 Gems!");
+              updateHUD();
+              if (en.isBoss) endGame(true);
+            }
+            break;
+          }
+        }
+        if (hit || l.life <= 0) lasers.splice(i, 1);
+      }
+
+      // Enemy AI & Damage
+      enemies.forEach(en => {
+        const dx = player.x - en.x;
+        const dz = player.z - en.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist > 0.1) {
+          en.x += (dx / dist) * en.speed * dt;
+          en.z += (dz / dist) * en.speed * dt;
+        }
+        if (dist < (en.isBoss ? 3.5 : 1.8) && player.y < 2.2) {
+          player.hp -= en.dmg * dt;
+          updateHUD();
+          if (player.hp <= 0) {
+            player.hp = 0;
+            updateHUD();
+            endGame(false);
+          }
+        }
+      });
+
+      if (enemies.length === 0 && !gameEnded && wave <= maxNormalWaves) {
+        openShop();
+      }
+    }
+
+    // Smooth Camera Follow
+    cam.x += (player.x - cam.x) * 0.12;
+    cam.z += (player.z + 24 - cam.z) * 0.12;
+
+    renderScene();
+  }
+
+  requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
