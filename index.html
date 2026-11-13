@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>👽 ALIEN FRONTIER 3D — EVOLVED</title>
+  <title>👽 ALIEN FRONTIER 3D — FUSION EDITION</title>
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
@@ -30,7 +30,7 @@
       padding: 14px 18px;
       pointer-events: none;
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.25);
-      min-width: 280px;
+      min-width: 300px;
     }
     #hud h1 {
       margin: 0 0 8px 0;
@@ -39,24 +39,30 @@
       letter-spacing: 2px;
       text-shadow: 0 0 8px rgba(85, 255, 207, 0.5);
     }
-    .hp-wrap {
+    .bar-wrap {
       width: 100%;
-      height: 14px;
+      height: 12px;
       background: #0f172a;
       border-radius: 99px;
       overflow: hidden;
       border: 1px solid #334155;
-      margin: 6px 0 10px 0;
+      margin: 4px 0 8px 0;
     }
     #hp-bar {
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, #ef4444, #22c55e);
-      transition: width 0.2s;
+      transition: width 0.15s;
+    }
+    #stam-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      transition: width 0.08s;
     }
     .stat-line {
       font-size: 13px;
-      margin: 4px 0;
+      margin: 3px 0;
       color: #e2e8f0;
       font-weight: 600;
     }
@@ -136,13 +142,13 @@
       border: 2px solid #55ffcf;
       border-radius: 16px;
       padding: 24px;
-      width: min(94vw, 640px);
+      width: min(94vw, 660px);
       text-align: center;
       box-shadow: 0 0 35px rgba(85, 255, 207, 0.3);
     }
     .shop-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 12px;
       margin: 16px 0;
     }
@@ -157,7 +163,7 @@
     }
     .card.weapon-card {
       border-color: #f59e0b;
-      background: linear-gradient(180deg, rgba(45, 26, 12, 0.6), rgba(15, 23, 42, 0.95));
+      background: linear-gradient(180deg, rgba(65, 32, 12, 0.75), rgba(15, 23, 42, 0.95));
     }
     .card h4 { margin: 0 0 5px 0; color: #7dd3fc; font-size: 15px; }
     .card.weapon-card h4 { color: #fbbf24; }
@@ -170,26 +176,27 @@
 
   <div id="hud">
     <h1>👽 ALIEN FRONTIER 3D</h1>
-    <div class="stat-line" id="wave-info">🌊 Wave: 1 / 5</div>
-    <div class="hp-wrap"><div id="hp-bar"></div></div>
-    <div class="stat-line" id="stats">❤️ 100/100 | 🔫 Pulse Blaster | 🛡️ Turrets: 0</div>
+    <div class="stat-line" id="wave-info">🌊 Wave: 1</div>
+    <div class="bar-wrap"><div id="hp-bar"></div></div>
+    <div class="bar-wrap" style="height:7px;"><div id="stam-bar"></div></div>
+    <div class="stat-line" id="stats">❤️ 100/100 | 🔫 Pulse Blaster (Lvl 1)</div>
     <div class="res-grid">
-      <div class="res-pill" id="res-gem">💎 0</div>
+      <div class="res-pill" id="res-gem">💎 2</div>
       <div class="res-pill" id="res-wood">🪵 5</div>
       <div class="res-pill" id="res-med">💊 1</div>
       <div class="res-pill" id="res-tit">🪨 0</div>
       <div class="res-pill" id="res-pla">⚡ 0</div>
-      <div class="res-pill" id="res-scr">🔩 0</div>
+      <div class="res-pill" id="res-scr">🔩 2</div>
     </div>
-    <div id="status">Aim with Mouse, Shoot with F or Click!</div>
+    <div id="status">Aim anywhere with Mouse! Hold SHIFT to Sprint!</div>
   </div>
 
   <div id="controls">
-    <b>WASD</b> = Run &nbsp;|&nbsp;
+    <b>WASD</b> = Move &nbsp;|&nbsp;
+    <b>SHIFT</b> = Sprint &nbsp;|&nbsp;
     <b>SPACE</b> = Jump &nbsp;|&nbsp;
-    <b>Mouse</b> = Aim &nbsp;|&nbsp;
+    <b>Mouse</b> = 360° Aim &nbsp;|&nbsp;
     <b>F / Click</b> = Shoot &nbsp;|&nbsp;
-    <b>E</b> = Gather &nbsp;|&nbsp;
     <b>T</b> = Turret &nbsp;|&nbsp;
     <b>H</b> = Heal
   </div>
@@ -202,7 +209,7 @@
 
   <div id="shop-modal">
     <div class="box">
-      <h2 style="color:#55ffcf; margin:0 0 6px 0;">🛒 XENORA ARMORY & UPGRADE FORGE</h2>
+      <h2 style="color:#55ffcf; margin:0 0 6px 0;">🛒 XENORA WEAPON FUSION & UPGRADE FORGE</h2>
       <div id="shop-inv" style="font-size:13px; color:#93c5fd; font-weight:bold;"></div>
       <div class="shop-grid" id="shop-cards"></div>
       <div style="display:flex; gap:10px; justify-content:center;">
@@ -235,7 +242,6 @@
   const cosP = Math.cos(pitch);
   const sinP = Math.sin(pitch);
 
-  // Project 3D world point to 2D screen coordinates
   function project3D(wx, wy, wz) {
     const dx = wx - cam.x;
     const dy = wy - cam.y;
@@ -252,15 +258,17 @@
     };
   }
 
-  // Convert 2D mouse screen position onto the 3D ground plane (y = 0)
+  // Exact Inverse Camera Projection onto Ground Plane (y = 0)
   const mouse = { sx: canvas.width / 2, sy: canvas.height / 2, wx: 0, wz: 0, down: false };
 
   function updateMouseWorld() {
     const nx = (mouse.sx - canvas.width * 0.5) / cam.fov;
     const ny = (canvas.height * 0.5 - mouse.sy) / cam.fov;
-    // Ray direction in world space
+
+    // Camera space ray (nx, ny, -1) rotated back by +pitch around X-axis
     const dirY = ny * cosP - sinP;
-    const dirZ = ny * sinP + cosP;
+    const dirZ = -ny * sinP - cosP;
+
     if (Math.abs(dirY) > 0.001) {
       const t = -cam.y / dirY;
       if (t > 0) {
@@ -270,19 +278,18 @@
     }
   }
 
-  // Animated background stars
-  const stars = Array.from({ length: 90 }, () => ({
+  const stars = Array.from({ length: 95 }, () => ({
     x: Math.random() * 2000,
     y: Math.random() * 600,
     r: Math.random() * 1.8 + 0.5,
     twinkle: Math.random() * Math.PI * 2
   }));
-  const weaponsList = [
-    { id: "blaster", name: "🔫 Pulse Blaster", dmgMult: 1.0, rate: 0.28, count: 1, spread: 0, speed: 52, color: "#55ffcf", desc: "Reliable rapid energy bolts." },
-    { id: "shotgun", name: "💥 Tri-Spread Cannon", dmgMult: 0.75, rate: 0.52, count: 3, spread: 0.24, speed: 46, color: "#fb923c", desc: "Fires 3 wide plasma blasts." },
-    { id: "railgun", name: "⚡ Hyper Railgun", dmgMult: 2.3, rate: 0.65, count: 1, spread: 0, speed: 78, color: "#38bdf8", desc: "High-velocity piercing beam." },
-    { id: "minigun", name: "🔥 Starfire Gatling", dmgMult: 0.65, rate: 0.13, count: 1, spread: 0.12, speed: 56, color: "#f43f5e", desc: "Blazing fast automatic fire." },
-    { id: "nova", name: "🌟 Nova Starburst", dmgMult: 0.85, rate: 0.58, count: 5, spread: 0.42, speed: 44, color: "#e879f9", desc: "5-way cosmic energy fan." }
+  const fusionModules = [
+    { id: "shotgun", name: "Tri-Spread Barrel", addShots: 2, dmgMult: 1.25, rateMult: 0.92, speedAdd: 4, spreadAdd: 0.14, color: "#fb923c", desc: "Fuses +2 extra spread barrels & +25% dmg!" },
+    { id: "railgun", name: "Hyper Rail Core", addShots: 0, dmgMult: 1.65, rateMult: 0.90, speedAdd: 18, spreadAdd: 0, color: "#38bdf8", desc: "Fuses +65% massive damage & ultra velocity!" },
+    { id: "minigun", name: "Starfire Rotor", addShots: 1, dmgMult: 1.20, rateMult: 0.72, speedAdd: 8, spreadAdd: 0.08, color: "#f43f5e", desc: "Fuses +28% faster fire rate & +1 barrel!" },
+    { id: "nova", name: "Nova Prism", addShots: 3, dmgMult: 1.30, rateMult: 0.88, speedAdd: 6, spreadAdd: 0.22, color: "#e879f9", desc: "Fuses +3 cosmic beams & +30% power!" },
+    { id: "plasma", name: "Omega Singularity", addShots: 2, dmgMult: 1.50, rateMult: 0.82, speedAdd: 12, spreadAdd: 0.12, color: "#55ffcf", desc: "Fuses +2 beams, +50% dmg & faster fire!" }
   ];
 
   const player = {
@@ -292,10 +299,21 @@
     facing: 0,
     hp: 100,
     maxHp: 100,
-    speed: 16,
+    stamina: 100,
+    maxStamina: 100,
+    speed: 15,
     jump: 16,
     baseDamage: 24,
-    weapon: weaponsList[0],
+    weapon: {
+      name: "Pulse Blaster",
+      level: 1,
+      dmgMult: 1.0,
+      rate: 0.28,
+      count: 1,
+      spread: 0,
+      speed: 52,
+      color: "#55ffcf"
+    },
     fireTimer: 0,
     gems: 2,
     wood: 5,
@@ -306,7 +324,6 @@
   };
 
   let wave = 1;
-  const maxNormalWaves = 4; // Wave 5 is Cold Boss 🥶
   let enemies = [];
   let resources = [];
   let lasers = [];
@@ -321,11 +338,13 @@
   }
 
   function updateHUD() {
+    const isBossWave = wave % 5 === 0;
     document.getElementById("wave-info").textContent =
-      wave > maxNormalWaves ? "❄️ BOSS WAVE: COLD GUY 🥶" : `🌊 Wave: ${wave} / 5`;
+      isBossWave ? `❄️ WAVE ${wave} BOSS: GIANT COLD GUY 🥶` : `🌊 Wave: ${wave} (Boss on Wave ${Math.ceil(wave / 5) * 5})`;
     document.getElementById("hp-bar").style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+    document.getElementById("stam-bar").style.width = `${Math.max(0, (player.stamina / player.maxStamina) * 100)}%`;
     document.getElementById("stats").textContent =
-      `❤️ ${Math.ceil(player.hp)}/${player.maxHp} | ${player.weapon.name} | 🛡️ ${turrets.length}`;
+      `❤️ ${Math.ceil(player.hp)}/${player.maxHp} | 🔫 ${player.weapon.name} (Lvl ${player.weapon.level})`;
 
     document.getElementById("res-gem").textContent = `💎 ${player.gems}`;
     document.getElementById("res-wood").textContent = `🪵 ${player.wood}`;
@@ -351,7 +370,7 @@
   }
 
   function spawnFloatText(x, y, z, text, color = "#fff") {
-    floatTexts.push({ x, y: y + 2, z, text, color, life: 0.9 });
+    floatTexts.push({ x, y: y + 2, z, text, color, life: 0.85 });
   }
   const resourceTypes = [
     { type: "wood", icon: "🪵", name: "Alien Wood" },
@@ -376,14 +395,16 @@
     });
   }
 
-  for (let i = 0; i < 24; i++) spawnResource();
+  for (let i = 0; i < 26; i++) spawnResource();
 
   function spawnWave(waveNum) {
-    if (waveNum <= maxNormalWaves) {
-      const count = 5 + waveNum * 2;
-      const hp = 45 + (waveNum - 1) * 35;
-      const speed = 5.8 + (waveNum - 1) * 1.6;
-      const dmg = 12 + (waveNum - 1) * 6;
+    const scaleFactor = Math.pow(1.26, waveNum - 1);
+
+    if (waveNum % 5 !== 0) {
+      const count = 5 + Math.min(20, waveNum * 2);
+      const hp = Math.round(45 * scaleFactor);
+      const speed = Math.min(18, 5.8 + (waveNum - 1) * 1.15);
+      const dmg = Math.round(12 * Math.pow(1.2, waveNum - 1));
 
       for (let i = 0; i < count; i++) {
         const ang = (Math.PI * 2 * i) / count;
@@ -397,20 +418,25 @@
           wobble: Math.random() * 6
         });
       }
-      say(`Wave ${waveNum}: ${count} Aliens approaching! Aim with Mouse!`);
+      say(`Wave ${waveNum}: ${count} Stronger Aliens incoming!`);
     } else {
+      const bossTier = waveNum / 5;
+      const bossHp = Math.round(800 * Math.pow(1.65, bossTier - 1));
+      const bossDmg = Math.round(30 * Math.pow(1.3, bossTier - 1));
       enemies.push({
         x: 0, y: 0, z: -40,
-        hp: 750, maxHp: 750, speed: 8.8, dmg: 30,
+        hp: bossHp, maxHp: bossHp,
+        speed: Math.min(15, 8.8 + bossTier * 1.2),
+        dmg: bossDmg,
         isBoss: true, wobble: 0
       });
-      cam.shake = 0.5;
-      say("🥶 BOSS ALERT: THE GIANT COLD GUY HAS ARRIVED!");
+      cam.shake = 0.55;
+      say(`🥶 BOSS ALERT (TIER ${bossTier}): GIANT COLD GUY HAS ARRIVED!`);
     }
     updateHUD();
   }
   function shootLaser(x, y, z, vx, vz, dmg, color) {
-    lasers.push({ x, y, z, vx, vz, dmg, color, life: 1.3 });
+    lasers.push({ x, y, z, vx, vz, dmg, color, life: 1.35 });
   }
 
   function playerShoot() {
@@ -422,8 +448,9 @@
     const w = player.weapon;
     player.fireTimer = w.rate;
 
-    for (let i = 0; i < w.count; i++) {
-      const offset = w.count === 1 ? 0 : (i - (w.count - 1) / 2) * w.spread;
+    const totalShots = Math.min(15, w.count);
+    for (let i = 0; i < totalShots; i++) {
+      const offset = totalShots === 1 ? 0 : (i - (totalShots - 1) / 2) * (w.spread / Math.max(1, totalShots * 0.45));
       const ang = baseAng + offset;
       shootLaser(
         player.x,
@@ -435,7 +462,7 @@
         w.color
       );
     }
-    cam.shake = Math.max(cam.shake, 0.08);
+    cam.shake = Math.max(cam.shake, 0.07);
   }
 
   function buildTurret() {
@@ -450,24 +477,6 @@
     spawnParticles(player.x, 0, player.z, "#facc15", 12);
     say("🛡️ Auto-Turret deployed!");
     updateHUD();
-  }
-
-  function gatherResource() {
-    for (let i = resources.length - 1; i >= 0; i--) {
-      const r = resources[i];
-      if (Math.hypot(player.x - r.x, player.z - r.z) < 4.8) {
-        const amt = r.type === "wood" ? 3 : 2;
-        player[r.type] += amt;
-        spawnParticles(r.x, 0.5, r.z, "#55ffcf", 10);
-        spawnFloatText(r.x, 0, r.z, `+${amt} ${r.icon}`, "#55ffcf");
-        say(`Collected +${amt} ${r.name} ${r.icon}!`);
-        resources.splice(i, 1);
-        spawnResource();
-        updateHUD();
-        return;
-      }
-    }
-    say("Walk closer to any glowing material and press E!");
   }
 
   function craftMedkit() {
@@ -485,10 +494,10 @@
   function useMedkit() {
     if (player.medkits > 0 && player.hp < player.maxHp) {
       player.medkits--;
-      player.hp = Math.min(player.maxHp, player.hp + 50);
+      player.hp = Math.min(player.maxHp, player.hp + 55);
       spawnParticles(player.x, 0, player.z, "#22c55e", 14);
-      spawnFloatText(player.x, 0, player.z, "+50 HP", "#4ade80");
-      say("❤️ Restored +50 HP!");
+      spawnFloatText(player.x, 0, player.z, "+55 HP", "#4ade80");
+      say("❤️ Restored +55 HP!");
       updateHUD();
     } else {
       say("No medkits left or HP is already full!");
@@ -498,24 +507,32 @@
 
   function generateShopOffers() {
     const upgradePool = [
-      { kind: "stat", title: "⚔️ Weapon Core", desc: "+12 Base Damage", cost: { gems: 3, titanium: 2 }, apply: () => { player.baseDamage += 12; } },
-      { kind: "stat", title: "⚡ Thruster Boots", desc: "+3 Run Speed", cost: { gems: 2, plasma: 2 }, apply: () => { player.speed += 3; } },
-      { kind: "stat", title: "🛡️ Titanium Plating", desc: "+35 Max HP & Full Heal", cost: { gems: 2, titanium: 3 }, apply: () => { player.maxHp += 35; player.hp = player.maxHp; } },
+      { kind: "stat", title: "⚔️ Weapon Core", desc: "+15 Base Damage", cost: { gems: 3, titanium: 2 }, apply: () => { player.baseDamage += 15; } },
+      { kind: "stat", title: "⚡ Thruster Boots", desc: "+2.5 Move Speed & +25 Stamina", cost: { gems: 2, plasma: 2 }, apply: () => { player.speed += 2.5; player.maxStamina += 25; player.stamina = player.maxStamina; } },
+      { kind: "stat", title: "🛡️ Titanium Plating", desc: "+45 Max HP & Full Heal", cost: { gems: 2, titanium: 3 }, apply: () => { player.maxHp += 45; player.hp = player.maxHp; } },
       { kind: "stat", title: "🚀 Gravity Jets", desc: "+3.5 Jump Height", cost: { gems: 2, scrap: 3 }, apply: () => { player.jump += 3.5; } },
-      { kind: "stat", title: "🔋 Overclocked Capacitor", desc: "+15% Faster Fire Rate", cost: { gems: 3, plasma: 2 }, apply: () => { player.weapon = { ...player.weapon, rate: Math.max(0.08, player.weapon.rate * 0.85) }; } }
+      { kind: "stat", title: "🔋 Overclocked Capacitor", desc: "+18% Faster Fire Rate", cost: { gems: 3, plasma: 2 }, apply: () => { player.weapon.rate = Math.max(0.06, player.weapon.rate * 0.82); } }
     ];
 
-    // Pick 2 random upgrades + 1 random craftable weapon
     const shuffledUpgrades = [...upgradePool].sort(() => Math.random() - 0.5).slice(0, 2);
-    const otherWeapons = weaponsList.filter(w => w.id !== player.weapon.id);
-    const randWeapon = otherWeapons[Math.floor(Math.random() * otherWeapons.length)];
+    const mod = fusionModules[Math.floor(Math.random() * fusionModules.length)];
 
     const weaponOffer = {
       kind: "weapon",
-      title: randWeapon.name,
-      desc: randWeapon.desc,
+      title: `🔥 Fuse: ${mod.name}`,
+      desc: mod.desc,
       cost: { gems: 3, titanium: 2, scrap: 2 },
-      apply: () => { player.weapon = randWeapon; }
+      apply: () => {
+        const w = player.weapon;
+        w.level += 1;
+        w.name = `${mod.name.split(" ")[0]} ${w.name.split(" ").pop()}`;
+        w.count += mod.addShots;
+        w.dmgMult = +(w.dmgMult * mod.dmgMult).toFixed(2);
+        w.rate = Math.max(0.06, +(w.rate * mod.rateMult).toFixed(3));
+        w.speed += mod.speedAdd;
+        w.spread = Math.min(0.85, +(w.spread + mod.spreadAdd).toFixed(2));
+        w.color = mod.color;
+      }
     };
 
     currentShopOffers = [...shuffledUpgrades, weaponOffer];
@@ -539,7 +556,7 @@
 
   function renderShopUI() {
     document.getElementById("shop-inv").textContent =
-      `Inventory: 💎 ${player.gems} | 🪨 ${player.titanium} | ⚡ ${player.plasma} | 🔩 ${player.scrap} | 🪵 ${player.wood}`;
+      `Current Weapon: ${player.weapon.name} (Lvl ${player.weapon.level}, ${player.weapon.count}x shots) | 💎 ${player.gems} | 🪨 ${player.titanium} | ⚡ ${player.plasma} | 🔩 ${player.scrap}`;
     document.getElementById("reroll-btn").disabled = player.gems < 2;
 
     const container = document.getElementById("shop-cards");
@@ -556,7 +573,7 @@
         <div>
           <div class="cost-tag">Cost: ${formatCost(offer.cost)}</div>
           <button ${!canAfford(offer.cost) || offer.bought ? "disabled" : ""} onclick="buyOffer(${idx})">
-            ${offer.bought ? "✅ EQUIPPED" : (offer.kind === "weapon" ? "🔨 CRAFT WEAPON" : "⬆️ UPGRADE")}
+            ${offer.bought ? "✅ FUSED!" : (offer.kind === "weapon" ? "⚡ FUSE WEAPON" : "⬆️ UPGRADE")}
           </button>
         </div>
       `;
@@ -588,13 +605,12 @@
     wave++;
     spawnWave(wave);
   }
-  function endGame(win) {
+  function endGame() {
     gameEnded = true;
     document.getElementById("end-modal").style.display = "flex";
-    document.getElementById("end-title").textContent = win ? "🏆 VICTORY! COLD BOSS DEFEATED!" : "💀 GAME OVER";
-    document.getElementById("end-desc").textContent = win
-      ? "You defeated the Giant Cold Emoji Boss 🥶 and conquered XENORA-7!"
-      : "The aliens overwhelmed you. Gather materials and craft stronger weapons!";
+    document.getElementById("end-title").textContent = `💀 FALLEN ON WAVE ${wave}`;
+    document.getElementById("end-desc").textContent =
+      `You reached Wave ${wave} with a Level ${player.weapon.level} ${player.weapon.name}!`;
   }
 
   window.addEventListener("mousemove", e => {
@@ -616,7 +632,6 @@
       player.onGround = false;
       spawnParticles(player.x, 0, player.z, "#38bdf8", 6);
     }
-    if (k === "e") gatherResource();
     if (k === "t") buildTurret();
     if (k === "h") useMedkit();
   });
@@ -626,7 +641,6 @@
     ctx.fillStyle = "#060913";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Twinkling starfield
     stars.forEach(st => {
       const alpha = 0.4 + 0.6 * Math.abs(Math.sin(time * 2 + st.twinkle));
       ctx.fillStyle = `rgba(224, 242, 254, ${alpha})`;
@@ -635,7 +649,6 @@
       ctx.fill();
     });
 
-    // Neon Planet Grid
     ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
     ctx.lineWidth = 1.2;
     for (let i = -50; i <= 50; i += 10) {
@@ -645,9 +658,19 @@
       if (b1 && b2) { ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke(); }
     }
 
-    // Mouse Target Reticle on Ground
+    // Laser Sightline from Player to 360° Mouse Aim Target
+    const pProj = project3D(player.x, player.y + 1.0, player.z);
     const aimProj = project3D(mouse.wx, 0.1, mouse.wz);
-    if (aimProj && !isPaused) {
+    if (pProj && aimProj && !isPaused) {
+      ctx.strokeStyle = "rgba(85, 255, 207, 0.35)";
+      ctx.setLineDash([6, 6]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pProj.x, pProj.y);
+      ctx.lineTo(aimProj.x, aimProj.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
       ctx.strokeStyle = "#55ffcf";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -655,7 +678,6 @@
       ctx.stroke();
     }
 
-    // Collect & depth-sort 3D objects
     const list = [];
     resources.forEach(r => list.push({ kind: "res", obj: r, x: r.x, y: 0.8 + Math.sin(time * 3 + r.bob) * 0.25, z: r.z }));
     turrets.forEach(t => list.push({ kind: "turret", obj: t, x: t.x, y: 1.0, z: t.z }));
@@ -729,7 +751,6 @@
       }
     });
 
-    // Floating Damage & Pickup Numbers
     floatTexts.forEach(ft => {
       const p = project3D(ft.x, ft.y, ft.z);
       if (p) {
@@ -759,10 +780,22 @@
       if (keys["a"] || keys["arrowleft"]) mx -= 1;
       if (keys["d"] || keys["arrowright"]) mx += 1;
 
-      if (mx !== 0 || mz !== 0) {
+      const isMoving = mx !== 0 || mz !== 0;
+      const isSprinting = keys["shift"] && isMoving && player.stamina > 2;
+
+      if (isSprinting) {
+        player.stamina = Math.max(0, player.stamina - 38 * dt);
+        if (Math.random() < 0.45) spawnParticles(player.x, 0.2, player.z, "#38bdf8", 1);
+      } else {
+        player.stamina = Math.min(player.maxStamina, player.stamina + 22 * dt);
+      }
+      updateHUD();
+
+      if (isMoving) {
         const len = Math.hypot(mx, mz);
-        player.x += (mx / len) * player.speed * dt;
-        player.z += (mz / len) * player.speed * dt;
+        const curSpeed = isSprinting ? player.speed * 1.75 : player.speed;
+        player.x += (mx / len) * curSpeed * dt;
+        player.z += (mz / len) * curSpeed * dt;
       }
 
       player.x = Math.max(-48, Math.min(48, player.x));
@@ -771,6 +804,29 @@
       player.y += player.vy * dt;
       if (player.y > 0) player.vy -= 34 * dt;
       else { player.y = 0; player.vy = 0; player.onGround = true; }
+
+      // Auto-Magnet Resource Collection when nearby!
+      for (let i = resources.length - 1; i >= 0; i--) {
+        const r = resources[i];
+        const dx = player.x - r.x;
+        const dz = player.z - r.z;
+        const dist = Math.hypot(dx, dz);
+
+        if (dist < 8.5) {
+          // Pull smoothly toward player
+          r.x += (dx / Math.max(0.1, dist)) * 22 * dt;
+          r.z += (dz / Math.max(0.1, dist)) * 22 * dt;
+        }
+        if (dist < 2.2) {
+          const amt = r.type === "wood" ? 3 : 2;
+          player[r.type] += amt;
+          spawnParticles(r.x, 0.5, r.z, "#55ffcf", 8);
+          spawnFloatText(player.x, 1.2, player.z, `+${amt} ${r.icon}`, "#55ffcf");
+          resources.splice(i, 1);
+          spawnResource();
+          updateHUD();
+        }
+      }
 
       // Turret Auto-Fire
       turrets.forEach(t => {
@@ -783,8 +839,8 @@
           });
           if (target) {
             const ang = Math.atan2(target.x - t.x, target.z - t.z);
-            shootLaser(t.x, 1.4, t.z, Math.sin(ang) * 45, Math.cos(ang) * 45, 20, "#facc15");
-            t.cooldown = 0.8;
+            shootLaser(t.x, 1.4, t.z, Math.sin(ang) * 45, Math.cos(ang) * 45, 20 + wave * 4, "#facc15");
+            t.cooldown = 0.75;
           }
         }
       });
@@ -802,17 +858,17 @@
           if (Math.hypot(l.x - en.x, l.z - en.z) < (en.isBoss ? 3.6 : 1.8)) {
             en.hp -= l.dmg;
             hit = true;
-            spawnParticles(l.x, 1.2, l.z, l.color, 5);
+            spawnParticles(l.x, 1.2, l.z, l.color, 4);
             spawnFloatText(en.x, 1.5, en.z, `-${l.dmg}`, "#fde047");
 
             if (en.hp <= 0) {
               enemies.splice(j, 1);
-              player.gems += en.isBoss ? 25 : 2;
-              spawnParticles(en.x, 1.5, en.z, en.isBoss ? "#38bdf8" : "#4ade80", 22);
-              cam.shake = en.isBoss ? 0.6 : 0.18;
-              say(en.isBoss ? "🥶 COLD BOSS DEFEATED! +25 Gems!" : "👽 Alien vaporized! +2 Gems!");
+              const gemReward = en.isBoss ? 20 : 2;
+              player.gems += gemReward;
+              spawnParticles(en.x, 1.5, en.z, en.isBoss ? "#38bdf8" : "#4ade80", 20);
+              cam.shake = en.isBoss ? 0.6 : 0.16;
+              say(en.isBoss ? `🥶 COLD BOSS DEFEATED! +${gemReward} Gems!` : `👽 Alien vaporized! +${gemReward} Gems!`);
               updateHUD();
-              if (en.isBoss) endGame(true);
             }
             break;
           }
@@ -836,7 +892,7 @@
           if (player.hp <= 0) {
             player.hp = 0;
             updateHUD();
-            endGame(false);
+            endGame();
           }
         }
       });
@@ -855,10 +911,9 @@
         if (floatTexts[i].life <= 0) floatTexts.splice(i, 1);
       }
 
-      if (enemies.length === 0 && !gameEnded && wave <= maxNormalWaves) openShop();
+      if (enemies.length === 0 && !gameEnded) openShop();
     }
 
-    // Smooth Camera Follow + Screen Shake
     cam.shake = Math.max(0, cam.shake - dt * 1.8);
     const sx = (Math.random() - 0.5) * cam.shake * 2.5;
     const sz = (Math.random() - 0.5) * cam.shake * 2.5;
@@ -873,3 +928,4 @@
 </script>
 </body>
 </html>
+
