@@ -331,6 +331,7 @@
   let lasers = [];
   let iceShots = [];
   let frozenTimer = 0;
+  let spawnProtection = 0;
   let particles = [];
   let floatTexts = [];
   let isPaused = false;
@@ -467,7 +468,7 @@
       swarm:["#e4ff8a","#82a72f","#35451b"], regenerator:["#b5ffd1","#42a77a","#164b3a"],
       frostling:["#e4fbff","#66c5dd","#174b70"], shocker:["#fff49b","#c0a52d","#51420e"],
       phantom:["#e5c9ff","#9864c7","#392052"], mortar:["#ffd4a6","#b76b3b","#48281c"],
-      juggernaut:["#e0b9a0","#865c4c","#30221e"]
+      juggernaut:["#e0b9a0","#865c4c","#30221e"],leech:["#ffb4c8","#bd496e","#4d1931"],summoner:["#e4c7ff","#8252b8","#291642"],bomber:["#ffd2a1","#cf642e","#54250f"],webber:["#e9d5ff","#8b72bd","#33224e"],banshee:["#f5d0fe","#b44acb","#4a1458"],warden:["#fff0a6","#b88a28","#49320c"]
     };
     const c=palettes[en.type]||palettes.grunt;
     ctx.save(); ctx.translate(x,y);
@@ -521,6 +522,7 @@
   }
 
   function damagePlayer(amount) {
+    if (spawnProtection > 0) return 0;
     const reduced = amount * (1 - player.damageResistance);
     player.hp = Math.max(0, player.hp - reduced);
     return reduced;
@@ -533,7 +535,7 @@
     document.getElementById("hp-bar").style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
     document.getElementById("stam-bar").style.width = `${Math.max(0, (player.stamina / player.maxStamina) * 100)}%`;
     document.getElementById("stats").textContent =
-      `❤️ ${Math.ceil(player.hp)}/${player.maxHp} | 🛡️ ${Math.round(player.damageResistance*100)}% Resist | 🔫 ${player.weapon.name} (Lvl ${player.weapon.level})`;
+      `❤️ ${Math.ceil(player.hp)}/${player.maxHp} | 🛡️ ${Math.round(player.damageResistance*100)}% Resist | ${spawnProtection>0?`✨ SPAWN SAFE ${spawnProtection.toFixed(1)}s | `:""}🔫 ${player.weapon.name} (Lvl ${player.weapon.level})`;
 
     document.getElementById("res-gem").textContent = `💎 ${player.gems}`;
     document.getElementById("res-wood").textContent = `🪵 ${player.wood}`;
@@ -585,7 +587,22 @@
 
   for (let i = 0; i < 26; i++) spawnResource();
 
+  function getEdgeSpawnPosition(minDistance = 72) {
+    // Spawn on the outer boundary, never beside or on top of the player.
+    for (let attempt = 0; attempt < 80; attempt++) {
+      const side = Math.floor(Math.random() * 4);
+      const edge = 184 + Math.random() * 12;
+      const along = -178 + Math.random() * 356;
+      const pos = side === 0 ? {x:-edge,z:along} : side === 1 ? {x:edge,z:along} : side === 2 ? {x:along,z:-edge} : {x:along,z:edge};
+      if (Math.hypot(pos.x-player.x,pos.z-player.z) >= minDistance) return pos;
+    }
+    const a = Math.random()*Math.PI*2;
+    return {x:Math.max(-190,Math.min(190,player.x+Math.cos(a)*95)),z:Math.max(-190,Math.min(190,player.z+Math.sin(a)*95))};
+  }
+
   function spawnWave(waveNum) {
+    spawnProtection = 5;
+    say("🛡️ WAVE START: 5 SECONDS OF SPAWN PROTECTION!");
     const scaleFactor=Math.pow(1.22,waveNum-1);
     if(waveNum%5!==0){
       const count=8+Math.min(27,waveNum*2);
@@ -593,27 +610,30 @@
       const roster=[
         ["grunt",1], ["teleporter",.8], ["charger",.9], ["spitter",.95], ["brute",.55], ["skitter",.9],
         ["shield",.65], ["burrower",.7], ["splitter",.65], ["sniper",.55], ["swarm",.9], ["regenerator",.5],
-        ["frostling",.55], ["shocker",.6], ["phantom",.5], ["mortar",.48], ["juggernaut",.35]
+        ["frostling",.55], ["shocker",.6], ["phantom",.5], ["mortar",.48], ["juggernaut",.35],
+        ["leech",.52], ["summoner",.38], ["bomber",.58], ["webber",.48], ["banshee",.42], ["warden",.32]
       ];
-      const unlocked=roster.filter(([t])=>{const unlock={shield:3,burrower:3,splitter:4,sniper:4,swarm:5,regenerator:5,frostling:6,shocker:6,phantom:7,mortar:7,juggernaut:8};return waveNum>=(unlock[t]||1);});
+      const unlocked=roster.filter(([t])=>{const unlock={shield:3,burrower:3,splitter:4,sniper:4,swarm:5,regenerator:5,frostling:6,shocker:6,phantom:7,mortar:7,juggernaut:8,leech:5,summoner:7,bomber:4,webber:6,banshee:8,warden:9};return waveNum>=(unlock[t]||1);});
       const total=unlocked.reduce((a,b)=>a+b[1],0);
       for(let i=0;i<count;i++){
         const ang=Math.PI*2*i/count+Math.random()*.15,rad=36+Math.random()*11;
         let roll=Math.random()*total,type="grunt";
         for(const [t,w] of unlocked){roll-=w;if(roll<=0){type=t;break;}}
-        const mult={grunt:1,teleporter:1.5,charger:1.35,spitter:1.25,brute:2.7,skitter:.72,shield:1.9,burrower:1.35,splitter:1.3,sniper:1.15,swarm:.58,regenerator:1.45,frostling:1.3,shocker:1.4,phantom:1.25,mortar:1.55,juggernaut:3.25}[type];
-        const speedMult={charger:1.05,skitter:1.55,brute:.68,shield:.72,sniper:.72,mortar:.68,juggernaut:.58,swarm:1.45}[type]||1;
-        enemies.push({x:Math.cos(ang)*rad,y:0,z:Math.sin(ang)*rad,hp:Math.round(hp*mult),maxHp:Math.round(hp*mult),speed:speed*speedMult,dmg:dmg*({charger:1.45,brute:1.9,juggernaut:2.25,shocker:1.2}[type]||1),isBoss:false,type,wobble:Math.random()*6,status:{},teleportCooldown:1+Math.random()*1.5,chargeCooldown:2+Math.random()*2,chargeTimer:0,spitCooldown:1.4+Math.random()*1.5,attackCooldown:1.8+Math.random()*2,burrowCooldown:3+Math.random()*3,burrowTimer:0,shieldCooldown:0,healCooldown:0,phantomCooldown:0,mortarCooldown:2.5+Math.random()*2,sniperCooldown:1.5+Math.random()*2,shockCooldown:2.5+Math.random()*2,splitDone:false});
+        const mult={grunt:1,teleporter:1.5,charger:1.35,spitter:1.25,brute:2.7,skitter:.72,shield:1.9,burrower:1.35,splitter:1.3,sniper:1.15,swarm:.58,regenerator:1.45,frostling:1.3,shocker:1.4,phantom:1.25,mortar:1.55,juggernaut:3.25,leech:1.45,summoner:1.65,bomber:1.1,webber:1.35,banshee:1.25,warden:2.4}[type];
+        const speedMult={charger:1.05,skitter:1.55,brute:.68,shield:.72,sniper:.72,mortar:.68,juggernaut:.58,swarm:1.45,summoner:.72,warden:.68}[type]||1;
+        const pos=getEdgeSpawnPosition();
+        enemies.push({x:pos.x,y:0,z:pos.z,hp:Math.round(hp*mult),maxHp:Math.round(hp*mult),speed:speed*speedMult,dmg:dmg*({charger:1.45,brute:1.9,juggernaut:2.25,shocker:1.2,bomber:2.1,banshee:1.35,warden:1.65}[type]||1),isBoss:false,type,wobble:Math.random()*6,status:{},teleportCooldown:1+Math.random()*1.5,chargeCooldown:2+Math.random()*2,chargeTimer:0,spitCooldown:1.4+Math.random()*1.5,attackCooldown:1.8+Math.random()*2,burrowCooldown:3+Math.random()*3,burrowTimer:0,shieldCooldown:0,healCooldown:0,phantomCooldown:0,mortarCooldown:2.5+Math.random()*2,sniperCooldown:1.5+Math.random()*2,shockCooldown:2.5+Math.random()*2,splitDone:false,leechCooldown:2.5,summonCooldown:7,bombCooldown:4,webCooldown:5,bansheeCooldown:4,wardenCooldown:3.5});
       }
       say(`Wave ${waveNum}: ${count} alien organisms detected. New species are adapting!`);
     }else{
       const bossTier=waveNum/5;
-      const bossHp=20000+(bossTier-1)*50000;
+      const bossHp=bossTier<4?20000+(bossTier-1)*50000:150000+(bossTier-4)*150000;
       const bossDmg=Math.round(34*Math.pow(1.22,bossTier-1));
-      const cooldownScale=Math.max(.42,1-(bossTier-1)*.075);
-      enemies.push({x:0,y:0,z:-40,hp:bossHp,maxHp:bossHp,speed:Math.min(16,7.4+bossTier*.65),dmg:bossDmg,isBoss:true,type:"coldboss",tier:bossTier,wobble:0,iceCooldown:1.15*cooldownScale,burstCooldown:5.2*cooldownScale,fanCooldown:3.5*cooldownScale,mineCooldown:7*cooldownScale,status:{}});
+      const cooldownScale=Math.max(.32,1-(bossTier-1)*.075);
+      const bossSpawn=getEdgeSpawnPosition(95);
+      enemies.push({x:bossSpawn.x,y:0,z:bossSpawn.z,hp:bossHp,maxHp:bossHp,speed:Math.min(18,7.4+bossTier*.65),dmg:bossDmg,isBoss:true,type:"coldboss",tier:bossTier,wobble:0,iceCooldown:1.15*cooldownScale,burstCooldown:5.2*cooldownScale,fanCooldown:3.5*cooldownScale,mineCooldown:7*cooldownScale,status:{},slamCooldown:bossTier>=4?5:999,slamWindup:0,slamRadius:0,slamPulse:0,slamHit:false,slamActive:false,blizzardCooldown:bossTier>=5?12:999,shardRainCooldown:bossTier>=6?15:999,echoCooldown:bossTier>=7?17:999,permafrostCooldown:bossTier>=8?21:999});
       cam.shake=.9;playSound("boss");
-      say(`🥶 THE BLUE GOOGLY MAN — ENCOUNTER ${bossTier}: ${bossHp.toLocaleString()} HP. HIS FROST POWERS HAVE EVOLVED!`);
+      say(`🥶 THE BLUE GOOGLY MAN — ENCOUNTER ${bossTier}: ${bossHp.toLocaleString()} HP. ${bossTier>=4?"JUMP OVER HIS TRIPLE SHOCKWAVE SLAM!":"HIS FROST POWERS HAVE EVOLVED!"}`);
     }
     updateHUD();if(waveNum%5!==0)playSound("wave");
   }
@@ -702,6 +722,18 @@
       {kind:"ability",ability:"fire",title:"🔥 Solar Flare (E)",desc:"Unlock a fiery blast that burns nearby enemies over time.",cost:{gems:7,titanium:3,plasma:4},apply:()=>{player.abilities.fire=true;}},
       {kind:"ability",ability:"electric",title:"⚡ Chain Surge (R)",desc:"Unlock an electric pulse that strikes several nearby enemies.",cost:{gems:8,titanium:4,plasma:5},apply:()=>{player.abilities.electric=true;}}
     ].filter(a=>!player.abilities[a.ability]);
+    const extraShopPool = [
+      {kind:"stat",title:"💚 Nanite Repair",desc:"Restore 45% of your maximum health immediately.",cost:{gems:3,scrap:3},apply:()=>{player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.45);}},
+      {kind:"stat",title:"🎯 Targeting Matrix",desc:"Increase weapon damage by 22%.",cost:{gems:4,titanium:2},apply:()=>{player.weapon.dmgMult*=1.22;}},
+      {kind:"stat",title:"🧲 Resource Magnet",desc:"Increase resource pickup range by 35%.",cost:{gems:3,plasma:2},apply:()=>{player.magnetBonus=(player.magnetBonus||0)+.35;}},
+      {kind:"stat",title:"🦘 Bounce Servos",desc:"Increase jump height by 2 and sprint stamina efficiency.",cost:{gems:3,scrap:4},apply:()=>{player.jump+=2;player.staminaRegen=(player.staminaRegen||22)+5;}},
+      {kind:"stat",title:"🔫 Rapid Chamber",desc:"Fire 12% faster.",cost:{gems:4,plasma:3},apply:()=>{player.weapon.rate=Math.max(.055,player.weapon.rate*.88);}},
+      {kind:"stat",title:"💎 Salvage Contract",desc:"Gain 5 gems immediately.",cost:{scrap:5,wood:4},apply:()=>{player.gems+=5;}},
+      {kind:"stat",title:"🧪 Plasma Converter",desc:"Gain 4 plasma immediately.",cost:{gems:3,wood:3},apply:()=>{player.plasma+=4;}},
+      {kind:"stat",title:"🧱 Reinforced Frame",desc:"Gain +30 maximum health.",cost:{gems:3,scrap:4},apply:()=>{player.maxHp+=30;player.hp=Math.min(player.maxHp,player.hp+30);}},
+      {kind:"stat",title:"🌪️ Phase Dash",desc:"Increase movement speed by 12%.",cost:{gems:4,plasma:2},apply:()=>{player.speed*=1.12;}},
+      {kind:"stat",title:"⚡ Capacitor Bank",desc:"Gain 3 plasma and 3 scrap.",cost:{gems:4,wood:4},apply:()=>{player.plasma+=3;player.scrap+=3;}}
+    ];
     const shuffledUpgrades = [...upgradePool].sort(() => Math.random() - 0.5).slice(0, 2);
     const mod = fusionModules[Math.floor(Math.random() * fusionModules.length)];
 
@@ -734,7 +766,14 @@
         say(`SHIELD UPGRADED! ${Math.round(player.damageResistance * 100)}% damage resistance.`);
       }
     };
-    currentShopOffers = [...shuffledUpgrades, weaponOffer, ...abilityPool.slice(0,3), shieldOffer];
+    const allOffers=[...upgradePool,...extraShopPool,...abilityPool,weaponOffer,shieldOffer];
+    const unique=[];
+    for(const offer of [...allOffers].sort(()=>Math.random()-.5)){
+      if(offer.kind==="ability" && player.abilities[offer.ability]) continue;
+      if(offer.kind==="shield" && player.damageResistance>=.75) continue;
+      if(!unique.some(o=>o.title===offer.title)) unique.push(offer);
+    }
+    currentShopOffers=unique.sort(()=>Math.random()-.5).slice(0,5);
   }
 
   function canAfford(cost) {
@@ -873,6 +912,12 @@
     }
     const beacon=project3D(-28,0,-29);if(beacon){ctx.strokeStyle="rgba(45,212,191,.45)";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(beacon.x,beacon.y);ctx.lineTo(beacon.x,beacon.y-58);ctx.stroke();ctx.fillStyle="rgba(45,212,191,.2)";ctx.beginPath();ctx.arc(beacon.x,beacon.y-58,17,0,Math.PI*2);ctx.fill();}
 
+    // Visible expanding ground rings for the Blue Googly Man's triple slam.
+    enemies.filter(e=>e.isBoss&&e.tier>=4&&e.slamWindup<=0&&e.slamPulse<3&&e.slamRadius>0).forEach(e=>{
+      const center=project3D(e.x,0,e.z); const edge=project3D(e.x+e.slamRadius,0,e.z);
+      if(center&&edge){const rr=Math.max(4,Math.abs(edge.x-center.x));ctx.save();ctx.strokeStyle="rgba(125,211,252,.9)";ctx.lineWidth=4;ctx.shadowColor="#38bdf8";ctx.shadowBlur=16;ctx.beginPath();ctx.ellipse(center.x,center.y,rr,rr*.34,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
+    });
+
     // Laser Sightline from Player to 360° Mouse Aim Target
     const pProj = project3D(player.x, player.y + 1.0, player.z);
     const aimProj = project3D(mouse.wx, 0.1, mouse.wz);
@@ -996,6 +1041,7 @@
     if (!isPaused && !gameEnded) {
       player.fireTimer = Math.max(0, player.fireTimer - dt);
       frozenTimer = Math.max(0, frozenTimer - dt);
+      spawnProtection = Math.max(0, spawnProtection - dt);
       for(const ability of ["poison","fire","electric"]) player.abilityCooldowns[ability]=Math.max(0,player.abilityCooldowns[ability]-dt);
       if (frozenTimer > 0 && Math.floor(frozenTimer * 4) !== Math.floor((frozenTimer + dt) * 4)) say("FROZEN! Movement slowed!");
       if (keys["f"] || mouse.down) playerShoot();
@@ -1013,7 +1059,7 @@
         player.stamina = Math.max(0, player.stamina - 38 * dt);
         if (Math.random() < 0.45) spawnParticles(player.x, 0.2, player.z, "#38bdf8", 1);
       } else {
-        player.stamina = Math.min(player.maxStamina, player.stamina + 22 * dt);
+        player.stamina = Math.min(player.maxStamina, player.stamina + (player.staminaRegen||22) * dt);
       }
       updateHUD();
 
@@ -1084,7 +1130,7 @@
 
             if (en.hp <= 0) {
               enemies.splice(j, 1);
-              if(en.type==="splitter"&&!en.splitDone){for(let k=0;k<2;k++){const a=Math.random()*Math.PI*2;enemies.push({x:en.x+Math.cos(a)*1.4,y:0,z:en.z+Math.sin(a)*1.4,hp:Math.max(18,en.maxHp*.24),maxHp:Math.max(18,en.maxHp*.24),speed:en.speed*1.35,dmg:en.dmg*.55,isBoss:false,type:"skitter",wobble:Math.random()*6,status:{},teleportCooldown:2,chargeCooldown:3,chargeTimer:0,spitCooldown:3,attackCooldown:2});}}
+              if(en.type==="splitter"&&!en.splitDone){for(let k=0;k<2;k++){const a=Math.random()*Math.PI*2;enemies.push({x:player.x+Math.cos(a)*Math.max(11,Math.hypot(en.x-player.x,en.z-player.z)),y:0,z:player.z+Math.sin(a)*Math.max(11,Math.hypot(en.x-player.x,en.z-player.z)),hp:Math.max(18,en.maxHp*.24),maxHp:Math.max(18,en.maxHp*.24),speed:en.speed*1.35,dmg:en.dmg*.55,isBoss:false,type:"skitter",wobble:Math.random()*6,status:{},teleportCooldown:2,chargeCooldown:3,chargeTimer:0,spitCooldown:3,attackCooldown:2});}}
               const gemReward = en.isBoss ? 20 : 2;
               player.gems += gemReward;
               spawnParticles(en.x, 1.5, en.z, en.isBoss ? "#38bdf8" : "#4ade80", 20);
@@ -1105,12 +1151,14 @@
         shot.x += shot.vx * dt;
         shot.z += shot.vz * dt;
         shot.life -= dt;
-        if(shot.kind==="mine"){shot.armed=(shot.armed||0)+dt;if(shot.armed>1.5&&Math.hypot(shot.x-player.x,shot.z-player.z)<2.7){damagePlayer(18+wave*.7);frozenTimer=Math.max(frozenTimer,1.8);spawnParticles(player.x,1,player.z,"#a5f3fc",20);iceShots.splice(i,1);say("A FROST MINE DETONATED!");updateHUD();}}
-        else if(shot.kind==="mortar"){shot.armed=(shot.armed||0)+dt;if(shot.armed>1.15){if(Math.hypot(shot.x-player.x,shot.z-player.z)<4.2){damagePlayer(22+wave*.8);cam.shake=Math.max(cam.shake,.35);say("MORTAR BLAST! Keep moving!");updateHUD();}spawnParticles(shot.x,.5,shot.z,"#fb923c",20);iceShots.splice(i,1);}}
+        if(shot.kind==="mine"){shot.armed=(shot.armed||0)+dt;if(shot.armed>1.5&&Math.hypot(shot.x-player.x,shot.z-player.z)<2.7){if(spawnProtection<=0){damagePlayer(18+wave*.7);frozenTimer=Math.max(frozenTimer,1.8);say("A FROST MINE DETONATED!");}else say("SPAWN PROTECTION BLOCKED THE FROST MINE!");spawnParticles(player.x,1,player.z,"#a5f3fc",20);iceShots.splice(i,1);updateHUD();}}
+        else if(shot.kind==="mortar"){shot.armed=(shot.armed||0)+dt;if(shot.armed>1.15){if(Math.hypot(shot.x-player.x,shot.z-player.z)<4.2){if(spawnProtection<=0){damagePlayer(22+wave*.8);cam.shake=Math.max(cam.shake,.35);say("MORTAR BLAST! Keep moving!");}else say("SPAWN PROTECTION BLOCKED THE BLAST!");updateHUD();}spawnParticles(shot.x,.5,shot.z,"#fb923c",20);iceShots.splice(i,1);}}
         else if(Math.hypot(shot.x-player.x,shot.z-player.z)<1.55&&player.y<2.5){
           iceShots.splice(i,1);
-          if(shot.kind==="acid"){damagePlayer(10+wave*.65);spawnParticles(player.x,1,player.z,"#9bdc32",12);playSound("acid");say("ACID SPLASH! Keep your distance from spitters!");}
+          if(spawnProtection>0){spawnParticles(player.x,.6,player.z,"#93c5fd",12);}
+          else if(shot.kind==="acid"){damagePlayer(10+wave*.65);spawnParticles(player.x,1,player.z,"#9bdc32",12);playSound("acid");say("ACID SPLASH! Keep your distance from spitters!");}
           else if(shot.kind==="shock"){damagePlayer(8+wave*.45);spawnParticles(player.x,.4,player.z,"#facc15",12);say("ELECTRIFIED! Dodge the shockwave!");}
+          else if(shot.kind==="web"){frozenTimer=Math.max(frozenTimer,2.1);spawnParticles(player.x,.5,player.z,"#e9d5ff",16);say("WEBBED! Movement slowed!");}
           else if(shot.kind==="sniper"){damagePlayer(19+wave*.8);cam.shake=Math.max(cam.shake,.28);say("SNIPER HIT! Break its line of sight!");}
           else if(shot.kind==="frost"){damagePlayer(9+wave*.5);frozenTimer=Math.max(frozenTimer,1.1);spawnParticles(player.x,1,player.z,"#a5f3fc",14);say("FROSTLING HIT! Your movement is slowed!");}
           else{frozenTimer=Math.max(frozenTimer,2.8);damagePlayer(12+wave*1.1);cam.shake=Math.max(cam.shake,.32);spawnParticles(player.x,1,player.z,"#9beaff",18);spawnFloatText(player.x,2,player.z,"FROZEN!","#a5f3fc");playSound("freeze");say("THE COLD BOSS FROZE YOU! Keep moving to dodge the ice!");}
@@ -1130,20 +1178,49 @@
           if(en.fanCooldown<=0&&dist>4){const aim=Math.atan2(dx,dz),spread=tier>=3?[-.48,-.24,0,.24,.48]:[-.3,0,.3],speed=17+tier;spread.forEach(off=>iceShots.push({x:en.x,y:2.6,z:en.z,vx:Math.sin(aim+off)*speed,vz:Math.cos(aim+off)*speed,life:3.4,kind:"ice"}));en.fanCooldown=3.6*scale;playSound("freeze");}
           if(en.burstCooldown<=0){const n=12+Math.min(12,tier*2);for(let k=0;k<n;k++){const a=k*Math.PI*2/n;iceShots.push({x:en.x,y:2.4,z:en.z,vx:Math.sin(a)*(11+tier),vz:Math.cos(a)*(11+tier),life:3.1,kind:"ice"});}en.burstCooldown=5*scale;spawnParticles(en.x,2,en.z,"#dffaff",24);cam.shake=Math.max(cam.shake,.24);say("THE BLUE GOOGLY MAN: ICICLE NOVA!");}
           if(en.mineCooldown<=0){const a=Math.atan2(dz,dx);for(let k=-1;k<=1;k++){const off=a+k*.42;iceShots.push({x:player.x+Math.cos(off)*7,y:.45,z:player.z+Math.sin(off)*7,vx:0,vz:0,life:2.2,kind:"mine",armed:0});}en.mineCooldown=8*scale;spawnFloatText(player.x,1.4,player.z,"FROST MINES!","#a5f3fc");}
+          if(en.tier>=4){
+            en.slamCooldown-=dt;
+            if(en.slamWindup>0){
+              en.slamWindup-=dt;
+              if(en.slamWindup<=0){en.slamRadius=0;en.slamHit=false;en.slamActive=true;cam.shake=Math.max(cam.shake,.65);spawnParticles(en.x,.2,en.z,"#7dd3fc",36);say("🥶 BLUE GOOGLY SLAM! JUMP OVER THE TRIPLE SHOCKWAVE!");}
+            } else if(en.slamPulse<3 && en.slamCooldown<=0){
+              en.slamWindup=1.05;en.slamCooldown=13/scale;en.slamPulse=0;en.slamHit=false;en.slamActive=false;spawnFloatText(en.x,3.5,en.z,"GET READY TO JUMP!","#7dd3fc");
+            }
+            if(en.slamActive && en.slamWindup<=0 && en.slamPulse<3){
+              en.slamRadius+=78*dt;
+              const playerDist=Math.hypot(player.x-en.x,player.z-en.z);
+              if(!en.slamHit && Math.abs(playerDist-en.slamRadius)<Math.max(2.2,78*dt+1.2)){
+                if(player.y<2.4){damagePlayer(24+en.tier*4);cam.shake=Math.max(cam.shake,.5);spawnParticles(player.x,.3,player.z,"#7dd3fc",22);say("SHOCKWAVE HIT! JUMP WHEN THE RING REACHES YOU!");}
+                else spawnFloatText(player.x,2,player.z,"NICE JUMP!","#86efac");
+                en.slamHit=true;
+              }
+              if(en.slamRadius>=68){en.slamPulse++;en.slamRadius=0;en.slamHit=false;en.slamActive=false;if(en.slamPulse<3)en.slamWindup=.55;else{en.slamCooldown=13/scale;en.slamPulse=0;}}
+            }
+          }
+          if(en.tier>=5){en.blizzardCooldown-=dt;if(en.blizzardCooldown<=0){en.blizzardCooldown=18/scale;for(let k=0;k<9;k++){const a=k*Math.PI*2/9;iceShots.push({x:en.x+Math.cos(a)*35,y:7,z:en.z+Math.sin(a)*35,vx:-Math.cos(a)*5,vz:-Math.sin(a)*5,life:3.8,kind:"frost"});}say("THE BLUE GOOGLY MAN: BLIZZARD WALL!");}}
+          if(en.tier>=6){en.shardRainCooldown-=dt;if(en.shardRainCooldown<=0){en.shardRainCooldown=20/scale;for(let k=0;k<7;k++){const ox=(Math.random()-.5)*48,oz=(Math.random()-.5)*48;iceShots.push({x:player.x+ox,y:9,z:player.z+oz,vx:0,vz:0,life:1.5,kind:"mortar",armed:0});}say("THE BLUE GOOGLY MAN: SHARD RAIN! MOVE!");}}
+          if(en.tier>=7){en.echoCooldown-=dt;if(en.echoCooldown<=0){en.echoCooldown=18/scale;const aim=Math.atan2(dx,dz);for(const off of [-.16,0,.16]){const a=aim+off;iceShots.push({x:en.x,y:3,z:en.z,vx:Math.sin(a)*(24+en.tier),vz:Math.cos(a)*(24+en.tier),life:4,kind:"ice"});}spawnParticles(en.x,2,en.z,"#c4b5fd",26);say("THE BLUE GOOGLY MAN: GLACIAL ECHO BURST!");}}
+          if(en.tier>=8){en.permafrostCooldown-=dt;if(en.permafrostCooldown<=0){en.permafrostCooldown=23/scale;for(let k=0;k<5;k++){const a=Math.random()*Math.PI*2,r=12+Math.random()*27;iceShots.push({x:player.x+Math.cos(a)*r,y:.45,z:player.z+Math.sin(a)*r,vx:0,vz:0,life:3.2,kind:"mine",armed:.8});}say("THE BLUE GOOGly MAN: PERMAFROST FIELD! KEEP MOVING!");}}
           if(dist>3){en.x+=(dx/dist)*en.speed*dt;en.z+=(dz/dist)*en.speed*dt;}
           if(dist<3.8&&player.y<2.5){damagePlayer(en.dmg*dt);cam.shake=Math.max(cam.shake,.13);updateHUD();if(player.hp<=0){player.hp=0;endGame();}}
         }else{
           let move=true;
-          if(en.type==="teleporter"){en.teleportCooldown-=dt;if(dist<11&&en.teleportCooldown<=0){const a=Math.random()*Math.PI*2;en.x=Math.max(-47,Math.min(47,player.x+Math.cos(a)*24));en.z=Math.max(-47,Math.min(47,player.z+Math.sin(a)*24));en.teleportCooldown=2.2;spawnParticles(en.x,1,en.z,"#a3e635",18);playSound("teleport");}}
+          if(en.type==="teleporter"){en.teleportCooldown-=dt;if(dist<11&&en.teleportCooldown<=0){const a=Math.random()*Math.PI*2;en.x=Math.max(-185,Math.min(185,player.x+Math.cos(a)*(32+Math.random()*10)));en.z=Math.max(-185,Math.min(185,player.z+Math.sin(a)*(32+Math.random()*10)));en.teleportCooldown=2.2;spawnParticles(en.x,1,en.z,"#a3e635",18);playSound("teleport");}}
           else if(en.type==="charger"){en.chargeCooldown-=dt;if(en.chargeCooldown<=0&&dist<31){en.chargeTimer=.85;en.chargeCooldown=3.6;en.chargeVx=dx/dist;en.chargeVz=dz/dist;playSound("charge");spawnFloatText(en.x,2,en.z,"CHARGING!","#fb923c");}if(en.chargeTimer>0){en.chargeTimer-=dt;en.x+=en.chargeVx*en.speed*3.5*dt;en.z+=en.chargeVz*en.speed*3.5*dt;move=false;}}
           else if(en.type==="spitter"||en.type==="frostling"){en.spitCooldown-=dt;if(en.spitCooldown<=0&&dist<38){const a=Math.atan2(dx,dz),v=en.type==="spitter"?14:15;iceShots.push({x:en.x,y:1.8,z:en.z,vx:Math.sin(a)*v,vz:Math.cos(a)*v,life:4,kind:en.type==="spitter"?"acid":"frost"});en.spitCooldown=en.type==="spitter"?2.25:2.6;playSound(en.type==="spitter"?"acid":"freeze");}move=dist<12;}
           else if(en.type==="shield"){en.shieldCooldown-=dt;if(en.shieldCooldown<=0){en.shieldCooldown=1.2;spawnParticles(en.x,1,en.z,"#67e8f9",5);}}
-          else if(en.type==="burrower"){en.burrowCooldown-=dt;if(en.burrowCooldown<=0&&dist<22){en.burrowTimer=1.15;en.burrowCooldown=4.5;spawnParticles(en.x,.2,en.z,"#b77950",12);}if(en.burrowTimer>0){en.burrowTimer-=dt;move=false;if(en.burrowTimer<=0){const a=Math.atan2(dz,dx);en.x=player.x-Math.cos(a)*3;en.z=player.z-Math.sin(a)*3;spawnParticles(en.x,.5,en.z,"#d6a477",16);}}}
+          else if(en.type==="leech"){en.leechCooldown-=dt;if(dist<18&&en.leechCooldown<=0&&spawnProtection<=0){const stolen=Math.min(7,Math.max(0,player.hp-1));if(stolen>0){damagePlayer(stolen);en.hp=Math.min(en.maxHp,en.hp+stolen*1.8);spawnParticles(en.x,1,en.z,"#fb7185",14);spawnFloatText(en.x,2,en.z,"LIFE DRAIN!","#fb7185");}en.leechCooldown=3.2;}}
+          else if(en.type==="summoner"){en.summonCooldown-=dt;move=dist<17;if(en.summonCooldown<=0){for(let k=0;k<2;k++){const a=Math.random()*Math.PI*2;const sx=en.x+Math.cos(a)*9,sz=en.z+Math.sin(a)*9;enemies.push({x:sx,y:0,z:sz,hp:Math.max(20,en.maxHp*.22),maxHp:Math.max(20,en.maxHp*.22),speed:en.speed*1.25,dmg:en.dmg*.65,isBoss:false,type:"skitter",wobble:Math.random()*6,status:{},teleportCooldown:3,chargeCooldown:3,chargeTimer:0,spitCooldown:2,attackCooldown:2,burrowCooldown:4,burrowTimer:0,shieldCooldown:0,healCooldown:0,phantomCooldown:0,mortarCooldown:3,sniperCooldown:2,shockCooldown:3,splitDone:true});}en.summonCooldown=8;spawnParticles(en.x,1,en.z,"#c084fc",20);spawnFloatText(en.x,2,en.z,"SUMMON!","#d8b4fe");}}
+          else if(en.type==="bomber"){en.bombCooldown-=dt;if(dist<11&&en.bombCooldown<=0){iceShots.push({x:en.x,y:.5,z:en.z,vx:dx/dist*7,vz:dz/dist*7,life:1.4,kind:"mortar",armed:0});en.bombCooldown=4.8;spawnFloatText(en.x,2,en.z,"BIO-BOMB!","#fb923c");}move=dist>7;}
+          else if(en.type==="webber"){en.webCooldown-=dt;if(dist<26&&en.webCooldown<=0){const a=Math.atan2(dx,dz);iceShots.push({x:en.x,y:1.5,z:en.z,vx:Math.sin(a)*12,vz:Math.cos(a)*12,life:3.8,kind:"web"});en.webCooldown=5;spawnFloatText(en.x,2,en.z,"WEB SHOT!","#e9d5ff");}move=dist<14;}
+          else if(en.type==="banshee"){en.bansheeCooldown-=dt;if(dist<30&&en.bansheeCooldown<=0){en.bansheeCooldown=4.5;if(spawnProtection<=0){frozenTimer=Math.max(frozenTimer,.8);damagePlayer(5+wave*.25);}cam.shake=Math.max(cam.shake,.2);spawnParticles(en.x,1,en.z,"#f0abfc",24);spawnFloatText(en.x,2,en.z,"SONIC SCREAM!","#f0abfc");}move=dist<9;}
+          else if(en.type==="warden"){en.wardenCooldown-=dt;if(en.wardenCooldown<=0){for(const ally of enemies){if(ally!==en&&!ally.isBoss&&Math.hypot(ally.x-en.x,ally.z-en.z)<14)ally.hp=Math.min(ally.maxHp,ally.hp+ally.maxHp*.12);}en.wardenCooldown=4;spawnParticles(en.x,1,en.z,"#fbbf24",18);spawnFloatText(en.x,2,en.z,"WARDEN PULSE!","#fde68a");} }
+          else if(en.type==="burrower"){en.burrowCooldown-=dt;if(en.burrowCooldown<=0&&dist<22){en.burrowTimer=1.15;en.burrowCooldown=4.5;spawnParticles(en.x,.2,en.z,"#b77950",12);}if(en.burrowTimer>0){en.burrowTimer-=dt;move=false;if(en.burrowTimer<=0){const a=Math.atan2(dz,dx);en.x=player.x-Math.cos(a)*11;en.z=player.z-Math.sin(a)*11;spawnParticles(en.x,.5,en.z,"#d6a477",16);}}}
           else if(en.type==="sniper"){en.sniperCooldown-=dt;move=dist<19;if(en.sniperCooldown<=0&&dist<48){const a=Math.atan2(dx,dz),v=23;iceShots.push({x:en.x,y:2,z:en.z,vx:Math.sin(a)*v,vz:Math.cos(a)*v,life:3.5,kind:"sniper"});en.sniperCooldown=2.7;spawnFloatText(en.x,2,en.z,"AIMING","#bfdbfe");}}
           else if(en.type==="swarm"){for(const ally of enemies){if(ally!==en&&!ally.isBoss&&Math.hypot(ally.x-en.x,ally.z-en.z)<9)ally.swarmBoost=1.18;} }
           else if(en.type==="regenerator"){en.healCooldown-=dt;if(en.healCooldown<=0){for(const ally of enemies){if(ally!==en&&!ally.isBoss&&Math.hypot(ally.x-en.x,ally.z-en.z)<12)ally.hp=Math.min(ally.maxHp,ally.hp+ally.maxHp*.055);}en.healCooldown=2.4;spawnParticles(en.x,1,en.z,"#4ade80",9);}}
           else if(en.type==="shocker"){en.shockCooldown-=dt;if(en.shockCooldown<=0&&dist<15){en.shockCooldown=3.3;for(let k=0;k<10;k++){const a=k*Math.PI/5;iceShots.push({x:en.x,y:.25,z:en.z,vx:Math.sin(a)*10,vz:Math.cos(a)*10,life:1.8,kind:"shock"});}playSound("charge");}}
-          else if(en.type==="phantom"){en.phantomCooldown-=dt;if(en.phantomCooldown<=0&&dist<18){const a=Math.atan2(dz,dx);en.x=player.x-Math.cos(a)*7;en.z=player.z-Math.sin(a)*7;en.phantomCooldown=3.6;spawnParticles(en.x,1,en.z,"#c084fc",18);}}
+          else if(en.type==="phantom"){en.phantomCooldown-=dt;if(en.phantomCooldown<=0&&dist<18){const a=Math.atan2(dz,dx);en.x=player.x-Math.cos(a)*13;en.z=player.z-Math.sin(a)*13;en.phantomCooldown=3.6;spawnParticles(en.x,1,en.z,"#c084fc",18);}}
           else if(en.type==="mortar"){en.mortarCooldown-=dt;move=dist<25;if(en.mortarCooldown<=0&&dist<42){iceShots.push({x:player.x,y:7,z:player.z,vx:0,vz:0,life:1.35,kind:"mortar",armed:0});en.mortarCooldown=3.7;spawnFloatText(player.x,2,player.z,"INCOMING!","#fdba74");}}
           else if(en.type==="juggernaut"){en.chargeCooldown-=dt;if(en.chargeCooldown<=0&&dist<25){en.chargeTimer=.65;en.chargeCooldown=4.2;en.chargeVx=dx/dist;en.chargeVz=dz/dist;cam.shake=Math.max(cam.shake,.12);}if(en.chargeTimer>0){en.chargeTimer-=dt;en.x+=en.chargeVx*en.speed*2.6*dt;en.z+=en.chargeVz*en.speed*2.6*dt;move=false;}}
           if(en.type==="burrower"&&en.burrowTimer>0)move=false;
