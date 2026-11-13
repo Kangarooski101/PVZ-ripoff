@@ -1,82 +1,368 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CineVault — Watch Movies & Play Games</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ALIEN FRONTIER LITE</title>
+<style>
+body{
+ margin:0;
+ background:#101526;
+ color:white;
+ font-family:Arial;
+ text-align:center;
+}
+h1{color:#55ffcf;letter-spacing:3px}
+#game{
+ width:min(95vw,700px);
+ height:auto;
+ aspect-ratio:7/5;
+ background:#352b4a;
+ border:3px solid #55ffcf;
+ display:block;
+ margin:10px auto;
+ image-rendering:pixelated;
+}
+.panel{
+ background:#182438;
+ padding:12px;
+ margin:10px auto;
+ width:min(90%,650px);
+ border:1px solid #55ffcf;
+ border-radius:8px;
+}
+button{
+ background:#17685e;
+ color:white;
+ border:1px solid #55ffcf;
+ padding:10px 18px;
+ margin:5px;
+ cursor:pointer;
+}
+button:hover{background:#219c86}
+#stats{color:#8dffdf}
+#status{color:#ffe38c}
+</style>
 </head>
 <body>
 
-  <header>
-    <a href="#" class="logo">Cine<span>Vault</span></a>
-    <nav class="nav-tabs">
-      <button class="nav-btn active" data-tab="movies">Movies</button>
-      <button class="nav-btn" data-tab="games">Arcade (50+ Games)</button>
-      <button class="nav-btn" data-tab="watchlist">My List (<span id="watchlistCount">0</span>)</button>
-    </nav>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search movies & games..." />
-    </div>
-  </header>
+<h1>👽 ALIEN FRONTIER</h1>
+<p>Survive on the planet XENORA-7</p>
 
-  <section class="hero" id="heroSection">
-    <div class="hero-content">
-      <span class="badge" id="heroBadge">Featured Premiere</span>
-      <h1 id="heroTitle">The Last Horizon</h1>
-      <p id="heroDesc">When a deep-space relay goes silent, an estranged crew must navigate an uncharted nebula to save Earth's final colony ship.</p>
-      <div class="hero-actions">
-        <button class="btn btn-play" id="heroWatchBtn">&#9654; Watch Now</button>
-        <button class="btn btn-secondary" id="featuredBtn">View Details</button>
-      </div>
-    </div>
-  </section>
+<canvas id="game" width="700" height="500"></canvas>
 
-  <main>
-    <div class="section-header">
-      <h2 id="sectionTitle">Stream Movies</h2>
-      <span class="item-count" id="itemCount"></span>
-    </div>
-    <div class="filters" id="genreFilters"></div>
-    <div class="grid" id="movieGrid"></div>
-  </main>
+<div class="panel">
+ <div id="stats">Health: 100 | Hunger: 100</div>
+ <p id="inventory">Wood: 0 | Crystals: 0 | Medkits: 0</p>
+ <p id="status">Explore the alien planet!</p>
+ <button onclick="craft()">CRAFT MEDKIT (3 CRYSTALS)</button>
+ <button onclick="heal()">USE MEDKIT</button>
+ <button onclick="saveGame()">SAVE GAME</button>
+</div>
 
-  <!-- Details & Watch/Play Modal -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal" id="modalContainer">
-      <button class="close-btn" id="closeModalBtn">&times;</button>
-      
-      <!-- Details View -->
-      <div class="modal-details-view" id="modalDetailsView">
-        <img id="modalPoster" src="" alt="Cover Art" />
-        <div class="modal-info">
-          <span class="badge" id="modalTypeBadge">Movie</span>
-          <h2 id="modalTitle"></h2>
-          <div class="modal-sub" id="modalMeta"></div>
-          <p class="modal-desc" id="modalDesc"></p>
-          <div class="modal-actions">
-            <button class="btn btn-play" id="watchNowBtn">&#9654; Watch Now</button>
-            <button class="btn btn-secondary" id="watchlistBtn">+ Add to My List</button>
-          </div>
-        </div>
-      </div>
+<div class="panel">
+ <b>CONTROLS</b>
+ <p>WASD / Arrows = Move</p>
+ <p>E = Collect resources</p>
+ <p>SPACE = Attack aliens</p>
+ <p>Collect crystals and avoid the monsters!</p>
+</div>
 
-      <!-- Interactive Player / Game Canvas View -->
-      <div class="modal-player-view" id="modalPlayerView" style="display: none;">
-        <div class="player-header">
-          <button class="btn btn-secondary btn-sm" id="backToDetailsBtn">&larr; Back to Details</button>
-          <h3 id="playerTitle">Now Playing</h3>
-          <button class="btn btn-secondary btn-sm" id="fullscreenBtn">&#x26F6; Fullscreen</button>
-        </div>
-        <div class="player-wrapper" id="playerWrapper">
-          <!-- Video player or Playable HTML5 Game injects here -->
-        </div>
-      </div>
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
-    </div>
-  </div>
+const player={
+ x:350,y:250,
+ health:100,
+ hunger:100,
+ crystals:0,
+ wood:0,
+ medkits:0
+};
 
-  <script src="script.js"></script>
+const keys={};
+let resources=[];
+let enemies=[];
+let gameOver=false;
+let lastTime=0;
+let spawnTimer=0;
+
+function random(a,b){
+ return Math.random()*(b-a)+a;
+}
+
+function spawnResource(){
+ resources.push({
+  x:random(20,680),
+  y:random(20,480),
+  type:Math.random()<.5?"crystal":"wood"
+ });
+}
+
+function spawnEnemy(){
+ enemies.push({
+  x:random(30,670),
+  y:random(30,470),
+  hp:2,
+  speed:random(35,65)
+ });
+}
+
+for(let i=0;i<20;i++)spawnResource();
+for(let i=0;i<4;i++)spawnEnemy();
+
+function updateUI(){
+ document.getElementById("stats").textContent=
+ "❤️ Health: "+Math.ceil(player.health)+
+ " | 🍖 Hunger: "+Math.ceil(player.hunger);
+
+ document.getElementById("inventory").textContent=
+ "🪵 Wood: "+player.wood+
+ " | 💎 Crystals: "+player.crystals+
+ " | 💊 Medkits: "+player.medkits;
+}
+
+function say(text){
+ document.getElementById("status").textContent=text;
+}
+
+function distance(a,b){
+ return Math.hypot(a.x-b.x,a.y-b.y);
+}
+
+function collect(){
+ for(let i=resources.length-1;i>=0;i--){
+  if(distance(player,resources[i])<30){
+   if(resources[i].type==="crystal"){
+    player.crystals++;
+    say("Crystal collected!");
+   }else{
+    player.wood++;
+    say("Alien wood collected!");
+   }
+   resources.splice(i,1);
+   spawnResource();
+   updateUI();
+   return;
+  }
+ }
+ say("Get closer to a resource!");
+}
+
+function attack(){
+ let target=null;
+ let closest=45;
+
+ for(const enemy of enemies){
+  const d=distance(player,enemy);
+  if(d<closest){
+   closest=d;
+   target=enemy;
+  }
+ }
+
+ if(target){
+  target.hp--;
+  say("You hit an alien!");
+
+  if(target.hp<=0){
+   enemies.splice(enemies.indexOf(target),1);
+   player.crystals++;
+   say("Alien defeated! +1 crystal");
+   spawnEnemy();
+  }
+  updateUI();
+ }else{
+  say("No alien close enough!");
+ }
+}
+
+function craft(){
+ if(player.crystals>=3){
+  player.crystals-=3;
+  player.medkits++;
+  say("Medkit crafted!");
+ }else{
+  say("You need 3 crystals!");
+ }
+ updateUI();
+}
+
+function heal(){
+ if(player.medkits>0&&player.health<100){
+  player.medkits--;
+  player.health=Math.min(100,player.health+35);
+  say("Health restored!");
+ }else{
+  say("No medkits available!");
+ }
+ updateUI();
+}
+
+function saveGame(){
+ localStorage.setItem("alienLiteSave",JSON.stringify(player));
+ say("Game saved!");
+}
+
+function loadGame(){
+ try{
+  const saved=JSON.parse(localStorage.getItem("alienLiteSave"));
+  if(saved){
+   Object.assign(player,saved);
+   updateUI();
+   say("Save loaded!");
+  }
+ }catch(e){
+  say("No saved game!");
+ }
+}
+
+document.addEventListener("keydown",e=>{
+ const key=e.key.toLowerCase();
+
+ if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key)){
+  e.preventDefault();
+ }
+
+ keys[key]=true;
+
+ if(e.repeat)return;
+
+ if(key==="e")collect();
+ if(key===" ")attack();
+ if(key==="c")craft();
+ if(key==="h")heal();
+});
+
+document.addEventListener("keyup",e=>{
+ keys[e.key.toLowerCase()]=false;
+});
+
+function draw(){
+ ctx.fillStyle="#382c4c";
+ ctx.fillRect(0,0,700,500);
+
+ // Alien ground
+ for(let i=0;i<100;i++){
+  const x=(i*83)%700;
+  const y=(i*137)%500;
+  ctx.fillStyle="#49364f";
+  ctx.fillRect(x,y,15,8);
+ }
+
+ // Alien plants
+ for(let i=0;i<25;i++){
+  const x=(i*127)%690;
+  const y=(i*97)%480;
+  ctx.fillStyle="#4d9b79";
+  ctx.fillRect(x,y,7,17);
+  ctx.fillStyle="#b64de1";
+  ctx.beginPath();
+  ctx.arc(x+3,y-3,5,0,Math.PI*2);
+  ctx.fill();
+ }
+
+ // Resources
+ for(const r of resources){
+  ctx.fillStyle=r.type==="crystal"?"#45fff2":"#d2a65b";
+  ctx.beginPath();
+  ctx.arc(r.x,r.y,9,0,Math.PI*2);
+  ctx.fill();
+ }
+
+ // Enemies
+ for(const e of enemies){
+  ctx.fillStyle="#a52f56";
+  ctx.beginPath();
+  ctx.arc(e.x,e.y,13,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle="#ff4444";
+  ctx.fillRect(e.x-7,e.y-4,4,4);
+  ctx.fillRect(e.x+4,e.y-4,4,4);
+ }
+
+ // Player
+ ctx.fillStyle="#5affc5";
+ ctx.beginPath();
+ ctx.arc(player.x,player.y,12,0,Math.PI*2);
+ ctx.fill();
+
+ ctx.fillStyle="white";
+ ctx.fillRect(player.x-4,player.y-4,3,3);
+ ctx.fillRect(player.x+3,player.y-4,3,3);
+
+ // World boundary
+ ctx.strokeStyle="#69ffdb";
+ ctx.lineWidth=3;
+ ctx.strokeRect(2,2,696,496);
+}
+
+function update(dt){
+ if(gameOver)return;
+
+ const speed=170;
+
+ if(keys.w||keys.arrowup)player.y-=speed*dt;
+ if(keys.s||keys.arrowdown)player.y+=speed*dt;
+ if(keys.a||keys.arrowleft)player.x-=speed*dt;
+ if(keys.d||keys.arrowright)player.x+=speed*dt;
+
+ player.x=Math.max(15,Math.min(685,player.x));
+ player.y=Math.max(15,Math.min(485,player.y));
+
+ // Hunger
+ player.hunger-=dt*.7;
+ if(player.hunger<=0){
+  player.hunger=0;
+  player.health-=dt*4;
+ }
+
+ // Enemy movement
+ for(const e of enemies){
+  const dx=player.x-e.x;
+  const dy=player.y-e.y;
+  const d=Math.hypot(dx,dy)||1;
+
+  e.x+=dx/d*e.speed*dt;
+  e.y+=dy/d*e.speed*dt;
+
+  if(d<22){
+   player.health-=dt*12;
+  }
+ }
+
+ // New resources
+ spawnTimer+=dt;
+ if(spawnTimer>8){
+  spawnTimer=0;
+  if(resources.length<25)spawnResource();
+ }
+
+ player.health=Math.max(0,player.health);
+ updateUI();
+
+ if(player.health<=0){
+  gameOver=true;
+  say("YOU DIED ON XENORA-7!");
+ }
+}
+
+function loop(time){
+ const dt=Math.min((time-lastTime)/1000||0,0.05);
+ lastTime=time;
+
+ update(dt);
+ draw();
+
+ requestAnimationFrame(loop);
+}
+
+loadGame();
+updateUI();
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>
-
