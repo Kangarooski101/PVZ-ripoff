@@ -1,778 +1,442 @@
+
 <!DOCTYPE html>
 <html lang="en">
+<html>
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineVault — Watch Movies & Play Games</title>
+  <link rel="stylesheet" href="style.css" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ALIEN FRONTIER 3D</title>
+<title>ALIEN FRONTIER LITE</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#090e19;color:white;font-family:Arial;text-align:center}
-h1{color:#5effd5;letter-spacing:3px;font-size:clamp(20px,5vw,32px)}
-#game{display:block;width:min(96vw,800px);height:auto;aspect-ratio:8/5;margin:auto;background:#211d3b;border:2px solid #50eecb;touch-action:none}
-.panel{width:min(94%,780px);margin:10px auto;background:#152337;padding:12px;border:1px solid #45d9c2;border-radius:8px}
-button{background:#145c54;color:white;border:1px solid #5effd5;padding:10px;margin:4px;cursor:pointer;border-radius:5px}
-button:hover{background:#238c7c}
-button:disabled{opacity:.35;cursor:not-allowed}
-#status{color:#7dffe0}
-small{color:#a8c5d2}
-#gameWrap{position:relative;width:min(96vw,800px);margin:auto}
-#crosshair{position:absolute;pointer-events:none;color:white;font-size:22px;left:50%;top:50%;transform:translate(-50%,-50%)}
-#shop{display:none;background:#101e32;border:2px solid #5effd5;border-radius:10px;padding:15px;margin:12px auto;width:min(94%,780px)}
-.shopItem{background:#1c3548;border:1px solid #397f83;border-radius:7px;margin:8px;padding:10px}
-.shopItem p{margin:5px}
-#death{display:none;color:#ff5555;font-size:24px}
+body{
+ margin:0;
+ background:#101526;
+ color:white;
+ font-family:Arial;
+ text-align:center;
+}
+h1{color:#55ffcf;letter-spacing:3px}
+#game{
+ width:min(95vw,700px);
+ height:auto;
+ aspect-ratio:7/5;
+ background:#352b4a;
+ border:3px solid #55ffcf;
+ display:block;
+ margin:10px auto;
+ image-rendering:pixelated;
+}
+.panel{
+ background:#182438;
+ padding:12px;
+ margin:10px auto;
+ width:min(90%,650px);
+ border:1px solid #55ffcf;
+ border-radius:8px;
+}
+button{
+ background:#17685e;
+ color:white;
+ border:1px solid #55ffcf;
+ padding:10px 18px;
+ margin:5px;
+ cursor:pointer;
+}
+button:hover{background:#219c86}
+#stats{color:#8dffdf}
+#status{color:#ffe38c}
 </style>
 </head>
 <body>
 
-<h1>👽 ALIEN FRONTIER 3D</h1>
-<p>XENORA-7 SURVIVAL EXPEDITION</p>
+  <header>
+    <a href="#" class="logo">Cine<span>Vault</span></a>
+    <nav class="nav-tabs">
+      <button class="nav-btn active" data-tab="movies">Movies</button>
+      <button class="nav-btn" data-tab="games">Arcade (50+ Games)</button>
+      <button class="nav-btn" data-tab="watchlist">My List (<span id="watchlistCount">0</span>)</button>
+    </nav>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search movies & games..." />
+    </div>
+  </header>
 
-<div id="gameWrap">
-<canvas id="game" width="800" height="500"></canvas>
-<div id="crosshair">+</div>
+  <section class="hero" id="heroSection">
+    <div class="hero-content">
+      <span class="badge" id="heroBadge">Featured Premiere</span>
+      <h1 id="heroTitle">The Last Horizon</h1>
+      <p id="heroDesc">When a deep-space relay goes silent, an estranged crew must navigate an uncharted nebula to save Earth's final colony ship.</p>
+      <div class="hero-actions">
+        <button class="btn btn-play" id="heroWatchBtn">&#9654; Watch Now</button>
+        <button class="btn btn-secondary" id="featuredBtn">View Details</button>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <div class="section-header">
+      <h2 id="sectionTitle">Stream Movies</h2>
+      <span class="item-count" id="itemCount"></span>
+    </div>
+    <div class="filters" id="genreFilters"></div>
+    <div class="grid" id="movieGrid"></div>
+  </main>
+
+  <!-- Details & Watch/Play Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="modalContainer">
+      <button class="close-btn" id="closeModalBtn">&times;</button>
+      
+      <!-- Details View -->
+      <div class="modal-details-view" id="modalDetailsView">
+        <img id="modalPoster" src="" alt="Cover Art" />
+        <div class="modal-info">
+          <span class="badge" id="modalTypeBadge">Movie</span>
+          <h2 id="modalTitle"></h2>
+          <div class="modal-sub" id="modalMeta"></div>
+          <p class="modal-desc" id="modalDesc"></p>
+          <div class="modal-actions">
+            <button class="btn btn-play" id="watchNowBtn">&#9654; Watch Now</button>
+            <button class="btn btn-secondary" id="watchlistBtn">+ Add to My List</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Player / Game Canvas View -->
+      <div class="modal-player-view" id="modalPlayerView" style="display: none;">
+        <div class="player-header">
+          <button class="btn btn-secondary btn-sm" id="backToDetailsBtn">&larr; Back to Details</button>
+          <h3 id="playerTitle">Now Playing</h3>
+          <button class="btn btn-secondary btn-sm" id="fullscreenBtn">&#x26F6; Fullscreen</button>
+        </div>
+        <div class="player-wrapper" id="playerWrapper">
+          <!-- Video player or Playable HTML5 Game injects here -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+<h1>👽 ALIEN FRONTIER</h1>
+<p>Survive on the planet XENORA-7</p>
+
+<canvas id="game" width="700" height="500"></canvas>
+
+<div class="panel">
+ <div id="stats">Health: 100 | Hunger: 100</div>
+ <p id="inventory">Wood: 0 | Crystals: 0 | Medkits: 0</p>
+ <p id="status">Explore the alien planet!</p>
+ <button onclick="craft()">CRAFT MEDKIT (3 CRYSTALS)</button>
+ <button onclick="heal()">USE MEDKIT</button>
+ <button onclick="saveGame()">SAVE GAME</button>
 </div>
 
 <div class="panel">
-<p id="stats">Health: 100 | Hunger: 100</p>
-<p id="inventory">Crystals: 0 | Wood: 0 | Medkits: 0</p>
-<p id="upgrades">Speed: 1 | Jump: 1 | Weapon: Locked</p>
-<p id="status">Click START TO PLAY</p>
-<p id="death">YOU DIED!</p>
-<button onclick="craft()">CRAFT MEDKIT</button>
-<button onclick="heal()">USE MEDKIT</button>
-<button onclick="toggleShop()">🛒 OPEN SHOP</button>
-<button onclick="save()">SAVE GAME</button>
-<button onclick="attack()">FIRE WEAPON</button>
-</div>
-
-<div id="shop">
-<h2>🛒 XENORA-7 UPGRADE SHOP</h2>
-<p>Spend your resources to become stronger. Warning: Aliens evolve with every purchase!</p>
-<div id="shopItems"></div>
-<button onclick="toggleShop()">CLOSE SHOP</button>
-</div>
-
-<div class="panel">
-<b>CONTROLS</b>
-<p>WASD / Arrow keys: Move</p>
-<p>Mouse: Look around</p>
-<p>E: Collect resources</p>
-<p>SPACE: Jump</p>
-<p>F: Shoot (after unlocking mouth weapon)</p>
-<p>C: Craft medkit | H: Heal</p>
-<p>SHIFT: Sprint</p>
-<small>Explore, gather materials, upgrade your abilities and survive increasingly dangerous aliens!</small>
+ <b>CONTROLS</b>
+ <p>WASD / Arrows = Move</p>
+ <p>E = Collect resources</p>
+ <p>SPACE = Attack aliens</p>
+ <p>Collect crystals and avoid the monsters!</p>
 </div>
 
 <script>
-"use strict";
-
 const canvas=document.getElementById("game");
-const gl=canvas.getContext("webgl",{antialias:false,alpha:false,powerPreference:"low-power"});
-
-if(!gl){
- document.getElementById("status").textContent="WebGL unavailable!";
- throw new Error("WebGL unavailable");
-}
-
-const vertexShader=`
-attribute vec3 position;
-uniform mat4 mvp;
-void main(){gl_Position=mvp*vec4(position,1.0);}
-`;
-
-const fragmentShader=`
-precision mediump float;
-uniform vec3 color;
-void main(){gl_FragColor=vec4(color,1.0);}
-`;
-
-function shader(type,source){
- const s=gl.createShader(type);
- gl.shaderSource(s,source);
- gl.compileShader(s);
- if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))
-  throw new Error(gl.getShaderInfoLog(s));
- return s;
-}
-
-const program=gl.createProgram();
-gl.attachShader(program,shader(gl.VERTEX_SHADER,vertexShader));
-gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragmentShader));
-gl.linkProgram(program);
-gl.useProgram(program);
-
-if(!gl.getProgramParameter(program,gl.LINK_STATUS))
- throw new Error(gl.getProgramInfoLog(program));
-
-const position=gl.getAttribLocation(program,"position");
-const mvpLocation=gl.getUniformLocation(program,"mvp");
-const colorLocation=gl.getUniformLocation(program,"color");
-
-gl.enable(gl.DEPTH_TEST);
-gl.clearColor(.10,.09,.19,1);
-
-function geometry(vertices){
- const buffer=gl.createBuffer();
- gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
- gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
- return {buffer,count:vertices.length/3};
-}
-
-const cube=geometry([
- -1,-1,1,1,-1,1,1,1,1,-1,-1,1,1,1,1,-1,1,1,
- 1,-1,-1,-1,-1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,1,-1,
- -1,-1,-1,-1,-1,1,-1,1,1,-1,-1,-1,-1,1,1,-1,1,-1,
- 1,-1,1,1,-1,-1,1,1,-1,1,-1,1,1,1,-1,1,1,1,
- -1,1,1,1,1,1,1,1,-1,-1,1,1,1,1,-1,-1,1,-1,
- -1,-1,-1,1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,1
-]);
-
-function createSphere(lat=12,lon=16){
- const v=[];
- for(let i=0;i<lat;i++){
-  const t1=i*Math.PI/lat,t2=(i+1)*Math.PI/lat;
-  for(let j=0;j<lon;j++){
-   const p1=j*2*Math.PI/lon,p2=(j+1)*2*Math.PI/lon;
-   function pt(t,p){return [Math.sin(t)*Math.cos(p),Math.cos(t),Math.sin(t)*Math.sin(p)];}
-   const a=pt(t1,p1),b=pt(t1,p2),c=pt(t2,p1),d=pt(t2,p2);
-   v.push(...a,...b,...c,...b,...d,...c);
-  }
- }
- return geometry(v);
-}
-
-const sphere=createSphere();
-const rock=geometry([
- 0,1,0,-1,-1,1,1,-1,1,
- 0,1,0,1,-1,1,1,-1,-1,
- 0,1,0,1,-1,-1,-1,-1,-1,
- 0,1,0,-1,-1,-1,-1,-1,1
-]);
-
-function multiply(a,b){
- const o=new Float32Array(16);
- for(let c=0;c<4;c++)for(let r=0;r<4;r++)
-  o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];
- return o;
-}
-
-function perspective(fov,aspect,near,far){
- const f=1/Math.tan(fov/2),nf=1/(near-far);
- return new Float32Array([
- f/aspect,0,0,0,0,f,0,0,
- 0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0
- ]);
-}
-
-function lookAt(eye,target){
- let zx=eye[0]-target[0],zy=eye[1]-target[1],zz=eye[2]-target[2];
- let l=Math.hypot(zx,zy,zz);
- zx/=l;zy/=l;zz/=l;
- let xx=zz,xz=-zx;
- l=Math.hypot(xx,xz);
- xx/=l;xz/=l;
- const yx=zy*xz,yy=zz*xx-zx*xz,yz=-zy*xx;
- return new Float32Array([
- xx,yx,zx,0,0,yy,zy,0,xz,yz,zz,0,
- -(xx*eye[0]+xz*eye[2]),
- -(yx*eye[0]+yy*eye[1]+yz*eye[2]),
- -(zx*eye[0]+zy*eye[1]+zz*eye[2]),1
- ]);
-}
-
-function model(x,y,z,sx,sy,sz,rot=0){
- const c=Math.cos(rot),s=Math.sin(rot);
- return new Float32Array([
- c*sx,0,-s*sx,0,0,sy,0,0,
- s*sz,0,c*sz,0,x,y,z,1
- ]);
-}
-
-const projection=perspective(Math.PI*.44,800/500,.1,200);
-let projectionView;
-
-function draw(g,mvp,color){
- gl.bindBuffer(gl.ARRAY_BUFFER,g.buffer);
- gl.enableVertexAttribArray(position);
- gl.vertexAttribPointer(position,3,gl.FLOAT,false,0,0);
- gl.uniformMatrix4fv(mvpLocation,false,mvp);
- gl.uniform3fv(colorLocation,color);
- gl.drawArrays(gl.TRIANGLES,0,g.count);
-}
-
-function object(g,x,y,z,sx,sy,sz,color,rot=0){
- draw(g,multiply(projectionView,model(x,y,z,sx,sy,sz,rot)),color);
-}
-
-// PLAYER
+const ctx=canvas.getContext("2d");
 
 const player={
- x:0,z:5,
- y:0,vy:0,
- health:100,hunger:100,
- crystals:0,wood:0,medkits:0,
- speedLevel:1,jumpLevel:1,
- damageLevel:0,healthLevel:0,
- mouthUnlocked:false,
- kills:0
+ x:350,y:250,
+ health:100,
+ hunger:100,
+ crystals:0,
+ wood:0,
+ medkits:0
 };
 
-let yaw=0,pitch=0;
-let started=false,dead=false;
-let last=0;
-let difficulty=1;
-let shopOpen=false;
-let attackCooldown=0;
-let resources=[],enemies=[],trees=[];
 const keys={};
+let resources=[];
+let enemies=[];
+let gameOver=false;
+let lastTime=0;
+let spawnTimer=0;
 
-function random(a,b){return a+Math.random()*(b-a);}
-
-function heightAt(x,z){
- return Math.sin(x*.15)*.5+
- Math.cos(z*.16)*.4+
- Math.sin((x+z)*.09)*.3;
+function random(a,b){
+ return Math.random()*(b-a)+a;
 }
 
 function spawnResource(){
  resources.push({
-  x:random(-35,35),
-  z:random(-35,35),
-  type:Math.random()<.65?"crystal":"wood"
+  x:random(20,680),
+  y:random(20,480),
+  type:Math.random()<.5?"crystal":"wood"
  });
 }
 
 function spawnEnemy(){
  enemies.push({
-  x:random(-35,35),
-  z:random(-35,35),
-  hp:Math.ceil(2+difficulty*.65),
-  attackCooldown:0
+  x:random(30,670),
+  y:random(30,470),
+  hp:2,
+  speed:random(35,65)
  });
 }
 
-for(let i=0;i<35;i++)spawnResource();
-for(let i=0;i<6;i++)spawnEnemy();
-
-for(let i=0;i<35;i++)
- trees.push({x:random(-45,45),z:random(-45,45),size:random(.7,1.5)});
-
-const terrainVertices=[];
-for(let x=-50;x<50;x+=2){
- for(let z=-50;z<50;z+=2){
-  const a=[x,heightAt(x,z),z];
-  const b=[x+2,heightAt(x+2,z),z];
-  const c=[x,heightAt(x,z+2),z+2];
-  const d=[x+2,heightAt(x+2,z+2),z+2];
-  terrainVertices.push(...a,...b,...c,...b,...d,...c);
- }
-}
-const terrainMesh=geometry(terrainVertices);
-
-// INPUT
-
-document.addEventListener("keydown",e=>{
- const k=e.key.toLowerCase();
- if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();
- keys[k]=true;
- if(e.repeat)return;
-
- if(k==="e")collect();
- if(k===" ")jump();
- if(k==="f")attack();
- if(k==="c")craft();
- if(k==="h")heal();
- if(k==="b")toggleShop();
- if(k==="escape"&&shopOpen)toggleShop();
-});
-
-document.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
-
-canvas.addEventListener("click",()=>{
- if(started&&!dead&&!shopOpen)canvas.requestPointerLock();
-});
-
-document.addEventListener("mousemove",e=>{
- if(!document.pointerLockElement)return;
- yaw-=e.movementX*.003;
- pitch-=e.movementY*.002;
- pitch=Math.max(-.5,Math.min(.5,pitch));
-});
-
-// UI
-
-function say(t){
- document.getElementById("status").textContent=t;
-}
+for(let i=0;i<20;i++)spawnResource();
+for(let i=0;i<4;i++)spawnEnemy();
 
 function updateUI(){
  document.getElementById("stats").textContent=
  "❤️ Health: "+Math.ceil(player.health)+
- " | 🍖 Hunger: "+Math.ceil(player.hunger)+
- " | 👽 Kills: "+player.kills+
- " | Difficulty: "+difficulty;
+ " | 🍖 Hunger: "+Math.ceil(player.hunger);
 
  document.getElementById("inventory").textContent=
- "💎 Crystals: "+player.crystals+
- " | 🪵 Wood: "+player.wood+
+ "🪵 Wood: "+player.wood+
+ " | 💎 Crystals: "+player.crystals+
  " | 💊 Medkits: "+player.medkits;
-
- document.getElementById("upgrades").textContent=
- "Speed: "+player.speedLevel+
- " | Jump: "+player.jumpLevel+
- " | Weapon: "+(player.mouthUnlocked?"UNLOCKED":"LOCKED");
 }
 
-// COLLECTING
+function say(text){
+ document.getElementById("status").textContent=text;
+}
+
+function distance(a,b){
+ return Math.hypot(a.x-b.x,a.y-b.y);
+}
 
 function collect(){
- let closest=null,best=3;
+ for(let i=resources.length-1;i>=0;i--){
+  if(distance(player,resources[i])<30){
+   if(resources[i].type==="crystal"){
+    player.crystals++;
+    say("Crystal collected!");
+   }else{
+    player.wood++;
+    say("Alien wood collected!");
+   }
+   resources.splice(i,1);
+   spawnResource();
+   updateUI();
+   return;
+  }
+ }
+ say("Get closer to a resource!");
+}
 
- for(const r of resources){
-  const d=Math.hypot(r.x-player.x,r.z-player.z);
-  if(d<best){best=d;closest=r;}
+function attack(){
+ let target=null;
+ let closest=45;
+
+ for(const enemy of enemies){
+  const d=distance(player,enemy);
+  if(d<closest){
+   closest=d;
+   target=enemy;
+  }
  }
 
- if(!closest){say("Move closer to a resource!");return;}
+ if(target){
+  target.hp--;
+  say("You hit an alien!");
 
- if(closest.type==="crystal"){
-  player.crystals++;
-  say("💎 Crystal collected!");
+  if(target.hp<=0){
+   enemies.splice(enemies.indexOf(target),1);
+   player.crystals++;
+   say("Alien defeated! +1 crystal");
+   spawnEnemy();
+  }
+  updateUI();
  }else{
-  player.wood++;
-  say("🪵 Alien wood collected!");
- }
-
- resources.splice(resources.indexOf(closest),1);
- updateUI();
-}
-
-// JUMPING
-
-function jump(){
- if(!started||dead)return;
- if(player.y<=.01){
-  player.vy=5.5+player.jumpLevel*.8;
-  say("JUMP!");
+  say("No alien close enough!");
  }
 }
-
-// MEDKITS
 
 function craft(){
- const crystalCost=8;
- const woodCost=5;
-
- if(player.crystals>=crystalCost&&player.wood>=woodCost){
-  player.crystals-=crystalCost;
-  player.wood-=woodCost;
+ if(player.crystals>=3){
+  player.crystals-=3;
   player.medkits++;
-  say("Medkit crafted! -8 crystals, -5 wood");
+  say("Medkit crafted!");
  }else{
-  say("Need 8 crystals AND 5 wood!");
+  say("You need 3 crystals!");
  }
  updateUI();
 }
 
 function heal(){
- if(player.medkits>0&&player.health<100+player.healthLevel*20){
+ if(player.medkits>0&&player.health<100){
   player.medkits--;
-  player.health=Math.min(100+player.healthLevel*20,player.health+45);
+  player.health=Math.min(100,player.health+35);
   say("Health restored!");
  }else{
-  say("No medkits or health already full!");
+  say("No medkits available!");
  }
  updateUI();
 }
 
-// MOUTH WEAPON
-
-function attack(){
- if(!player.mouthUnlocked){
-  say("Your mouth weapon is locked! Visit the shop.");
-  return;
- }
-
- if(!started||dead||attackCooldown>0)return;
- attackCooldown=.5;
-
- let target=null,best=20;
- const direction=[-Math.sin(yaw),-Math.cos(yaw)];
-
- for(const e of enemies){
-  const dx=e.x-player.x,dz=e.z-player.z;
-  const d=Math.hypot(dx,dz);
-  if(d>best)continue;
-
-  const dot=(dx/d)*direction[0]+(dz/d)*direction[1];
-  if(dot>.75){best=d;target=e;}
- }
-
- if(!target){say("Your mouth blast missed!");return;}
-
- target.hp-=1+player.damageLevel*2;
-
- say("🔥 ALIEN HIT!");
-
- if(target.hp<=0){
-  enemies.splice(enemies.indexOf(target),1);
-  player.crystals+=2;
-  player.wood++;
-  player.kills++;
-  say("ALIEN DESTROYED! +2 crystals +1 wood");
-  spawnEnemy();
- }
-
- updateUI();
+function saveGame(){
+ localStorage.setItem("alienLiteSave",JSON.stringify(player));
+ say("Game saved!");
 }
 
-// SHOP
-
-function toggleShop(){
- shopOpen=!shopOpen;
- document.getElementById("shop").style.display=shopOpen?"block":"none";
-
- if(shopOpen){
-  document.exitPointerLock();
-  buildShop();
- }else if(started&&!dead){
-  canvas.requestPointerLock();
- }
-}
-
-function makeItem(title,description,cost,action){
- const div=document.createElement("div");
- div.className="shopItem";
-
- const p=document.createElement("p");
- p.innerHTML="<b>"+title+"</b><br>"+description+"<br>Price: "+cost;
- div.appendChild(p);
-
- const button=document.createElement("button");
- button.textContent="PURCHASE";
- button.onclick=action;
- div.appendChild(button);
- document.getElementById("shopItems").appendChild(div);
- return button;
-}
-
-function purchase(crystals,wood,action){
- if(player.crystals<crystals||player.wood<wood){
-  say("Not enough materials!");
-  return false;
- }
- player.crystals-=crystals;
- player.wood-=wood;
- action();
-
- // EVERY PURCHASE MAKES THE ALIENS MORE DANGEROUS
- difficulty+=.7;
- const count=Math.min(2,1+Math.floor(difficulty/4));
- for(let i=0;i<count;i++)spawnEnemy();
-
- say("UPGRADE PURCHASED! ALIENS HAVE EVOLVED!");
- updateUI();
- buildShop();
- return true;
-}
-
-function buildShop(){
- const container=document.getElementById("shopItems");
- container.innerHTML="";
-
- makeItem(
-  "👄 UNLOCK MOUTH BLASTER",
-  "Unlock your alien energy weapon. Press F to shoot.",
-  "25 Crystals + 15 Wood",
-  ()=>purchase(25,15,()=>{
-   player.mouthUnlocked=true;
-  })
- ).disabled=player.mouthUnlocked;
-
- makeItem(
-  "⚡ SPEED UPGRADE",
-  "Increase your movement speed permanently.",
-  "10 Crystals + 10 Wood",
-  ()=>purchase(10,10,()=>player.speedLevel++)
- );
-
- makeItem(
-  "🦘 JUMP BOOST",
-  "Jump higher and reach more places.",
-  "12 Crystals + 8 Wood",
-  ()=>purchase(12,8,()=>player.jumpLevel++)
- );
-
- makeItem(
-  "💚 HEALTH UPGRADE",
-  "Increase your maximum health by 20.",
-  "15 Crystals + 15 Wood",
-  ()=>purchase(15,15,()=>{
-   player.healthLevel++;
-   player.health+=20;
-  })
- );
-
- makeItem(
-  "🔥 WEAPON DAMAGE",
-  "Make your mouth blaster deal more damage.",
-  "20 Crystals + 10 Wood",
-  ()=>purchase(20,10,()=>player.damageLevel++)
- );
-
- makeItem(
-  "💊 SHOP MEDKIT",
-  "Purchase an additional healing medkit.",
-  "12 Crystals + 12 Wood",
-  ()=>purchase(12,12,()=>player.medkits++)
- );
-
- makeItem(
-  "🌿 SURVIVAL BOOST",
-  "Restore hunger and receive 20 health.",
-  "8 Crystals + 15 Wood",
-  ()=>purchase(8,15,()=>{
-   player.hunger=100;
-   player.health=Math.min(100+player.healthLevel*20,player.health+20);
-  })
- );
-}
-
-// SAVE / LOAD
-
-function save(){
+function loadGame(){
  try{
-  localStorage.setItem("alien3Dsave",JSON.stringify({
-   ...player,difficulty
-  }));
-  say("Game saved!");
- }catch(e){say("Saving unavailable!");}
-}
-
-function load(){
- try{
-  const d=JSON.parse(localStorage.getItem("alien3Dsave"));
-  if(!d)return;
-
-  for(const k of [
-   "x","z","health","hunger","crystals","wood","medkits",
-   "speedLevel","jumpLevel","damageLevel","healthLevel",
-   "mouthUnlocked","kills"
-  ]){
-   if(d[k]!==undefined&&typeof d[k]===
-      (typeof player[k])){
-    player[k]=d[k];
-   }
+  const saved=JSON.parse(localStorage.getItem("alienLiteSave"));
+  if(saved){
+   Object.assign(player,saved);
+   updateUI();
+   say("Save loaded!");
   }
-
-  if(Number.isFinite(d.difficulty))difficulty=Math.max(1,d.difficulty);
-  updateUI();
-  say("Game loaded!");
- }catch(e){say("No save found!");}
+ }catch(e){
+  say("No saved game!");
+ }
 }
 
-// START
+document.addEventListener("keydown",e=>{
+ const key=e.key.toLowerCase();
 
-const startButton=document.createElement("button");
-startButton.textContent="START 3D GAME";
-
-startButton.onclick=()=>{
- if(started)return;
- started=true;
- startButton.remove();
- load();
- canvas.requestPointerLock();
- say("Welcome to XENORA-7! Survive!");
-};
-
-document.querySelector(".panel").appendChild(startButton);
-
-// RENDER
-
-function render(){
- gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
- gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-
- const eye=[
-  player.x,
-  heightAt(player.x,player.z)+1.65+player.y,
-  player.z
- ];
-
- const direction=[
-  -Math.sin(yaw)*Math.cos(pitch),
-  Math.sin(pitch),
-  -Math.cos(yaw)*Math.cos(pitch)
- ];
-
- projectionView=multiply(
-  projection,
-  lookAt(eye,[
-   eye[0]+direction[0],
-   eye[1]+direction[1],
-   eye[2]+direction[2]
-  ])
- );
-
- draw(terrainMesh,projectionView,[.30,.21,.37]);
-
- for(let i=0;i<12;i++){
-  object(rock,(i%4-2)*23,7,-45-Math.floor(i/4)*18,8,12,7,[.22,.17,.32]);
+ if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key)){
+  e.preventDefault();
  }
 
- for(const t of trees){
-  object(cube,t.x,1,t.z,.3*t.size,1.5*t.size,.3*t.size,[.22,.48,.38]);
-  object(sphere,t.x,3*t.size,t.z,1.4*t.size,1.8*t.size,1.4*t.size,[.18,.48,.38]);
+ keys[key]=true;
+
+ if(e.repeat)return;
+
+ if(key==="e")collect();
+ if(key===" ")attack();
+ if(key==="c")craft();
+ if(key==="h")heal();
+});
+
+document.addEventListener("keyup",e=>{
+ keys[e.key.toLowerCase()]=false;
+});
+
+function draw(){
+ ctx.fillStyle="#382c4c";
+ ctx.fillRect(0,0,700,500);
+
+ // Alien ground
+ for(let i=0;i<100;i++){
+  const x=(i*83)%700;
+  const y=(i*137)%500;
+  ctx.fillStyle="#49364f";
+  ctx.fillRect(x,y,15,8);
  }
 
+ // Alien plants
+ for(let i=0;i<25;i++){
+  const x=(i*127)%690;
+  const y=(i*97)%480;
+  ctx.fillStyle="#4d9b79";
+  ctx.fillRect(x,y,7,17);
+  ctx.fillStyle="#b64de1";
+  ctx.beginPath();
+  ctx.arc(x+3,y-3,5,0,Math.PI*2);
+  ctx.fill();
+ }
+
+ // Resources
  for(const r of resources){
-  if(r.type==="crystal"){
-   object(rock,r.x,1,r.z,.5,1,.5,[.1,.95,.88]);
-  }else{
-   object(cube,r.x,.5,r.z,.6,.5,.6,[.65,.43,.22]);
-  }
+  ctx.fillStyle=r.type==="crystal"?"#45fff2":"#d2a65b";
+  ctx.beginPath();
+  ctx.arc(r.x,r.y,9,0,Math.PI*2);
+  ctx.fill();
  }
 
- // ALIENS ALWAYS LOOK TOWARD THE PLAYER
-
+ // Enemies
  for(const e of enemies){
-  const dx=player.x-e.x;
-  const dz=player.z-e.z;
-  const face=Math.atan2(-dx,-dz);
+  ctx.fillStyle="#a52f56";
+  ctx.beginPath();
+  ctx.arc(e.x,e.y,13,0,Math.PI*2);
+  ctx.fill();
 
-  // Body
-  object(sphere,e.x,1.1,e.z,.55,.8,.4,[.28,.85,.48],face);
-
-  // Head
-  object(sphere,e.x,2.05,e.z,.72,.78,.58,[.35,1,.55],face);
-
-  // Eyes point toward player
-  object(sphere,e.x-.32,2.12,e.z-.48,.22,.28,.12,[.02,.04,.12],face);
-  object(sphere,e.x+.32,2.12,e.z-.48,.22,.28,.12,[.02,.04,.12],face);
-
-  object(sphere,e.x-.32,2.12,e.z-.57,.11,.17,.06,[0,1,1],face);
-  object(sphere,e.x+.32,2.12,e.z-.57,.11,.17,.06,[0,1,1],face);
-
-  object(sphere,e.x,1.78,e.z-.53,.23,.055,.06,[.04,.12,.08],face);
-
-  object(sphere,e.x-.35,2.85,e.z,.09,.35,.09,[.25,.8,.4]);
-  object(sphere,e.x+.35,2.85,e.z,.09,.35,.09,[.25,.8,.4]);
-
-  object(sphere,e.x-.35,3.2,e.z,.13,.13,.13,[1,.1,.8]);
-  object(sphere,e.x+.35,3.2,e.z,.13,.13,.13,[1,.1,.8]);
-
-  object(sphere,e.x-.7,1.25,e.z,.2,.55,.2,[.2,.7,.4],face-.3);
-  object(sphere,e.x+.7,1.25,e.z,.2,.55,.2,[.2,.7,.4],face+.3);
-
-  object(sphere,e.x-.3,.35,e.z,.22,.45,.22,[.15,.5,.3]);
-  object(sphere,e.x+.3,.35,e.z,.22,.45,.22,[.15,.5,.3]);
+  ctx.fillStyle="#ff4444";
+  ctx.fillRect(e.x-7,e.y-4,4,4);
+  ctx.fillRect(e.x+4,e.y-4,4,4);
  }
-}
 
-// UPDATE
+ // Player
+ ctx.fillStyle="#5affc5";
+ ctx.beginPath();
+ ctx.arc(player.x,player.y,12,0,Math.PI*2);
+ ctx.fill();
+
+ ctx.fillStyle="white";
+ ctx.fillRect(player.x-4,player.y-4,3,3);
+ ctx.fillRect(player.x+3,player.y-4,3,3);
+
+ // World boundary
+ ctx.strokeStyle="#69ffdb";
+ ctx.lineWidth=3;
+ ctx.strokeRect(2,2,696,496);
+}
 
 function update(dt){
- if(!started||dead||shopOpen)return;
+ if(gameOver)return;
 
- const speed=(keys.shift?10:6)*player.speedLevel;
+ const speed=170;
 
- let dx=0,dz=0;
+ if(keys.w||keys.arrowup)player.y-=speed*dt;
+ if(keys.s||keys.arrowdown)player.y+=speed*dt;
+ if(keys.a||keys.arrowleft)player.x-=speed*dt;
+ if(keys.d||keys.arrowright)player.x+=speed*dt;
 
- if(keys.w||keys.arrowup){dx-=Math.sin(yaw);dz-=Math.cos(yaw);}
- if(keys.s||keys.arrowdown){dx+=Math.sin(yaw);dz+=Math.cos(yaw);}
- if(keys.a||keys.arrowleft){dx-=Math.cos(yaw);dz+=Math.sin(yaw);}
- if(keys.d||keys.arrowright){dx+=Math.cos(yaw);dz-=Math.sin(yaw);}
+ player.x=Math.max(15,Math.min(685,player.x));
+ player.y=Math.max(15,Math.min(485,player.y));
 
- const length=Math.hypot(dx,dz)||1;
-
- player.x+=dx/length*speed*dt;
- player.z+=dz/length*speed*dt;
-
- player.x=Math.max(-48,Math.min(48,player.x));
- player.z=Math.max(-48,Math.min(48,player.z));
-
- // JUMP PHYSICS
-
- if(player.y>0||player.vy>0){
-  player.vy-=14*dt;
-  player.y+=player.vy*dt;
-  if(player.y<0){
-   player.y=0;
-   player.vy=0;
-  }
+ // Hunger
+ player.hunger-=dt*.7;
+ if(player.hunger<=0){
+  player.hunger=0;
+  player.health-=dt*4;
  }
 
- // HUNGER
-
- player.hunger=Math.max(0,player.hunger-dt*.25);
-
- if(player.hunger<=0)player.health-=dt*3;
-
- attackCooldown=Math.max(0,attackCooldown-dt);
-
- // ALIEN DIFFICULTY AND AI
-
+ // Enemy movement
  for(const e of enemies){
   const dx=player.x-e.x;
-  const dz=player.z-e.z;
-  const d=Math.hypot(dx,dz)||1;
+  const dy=player.y-e.y;
+  const d=Math.hypot(dx,dy)||1;
 
-  // EVERY ALIEN CHASES THE PLAYER, REGARDLESS OF DISTANCE
-  const alienSpeed=1.7+difficulty*.35;
+  e.x+=dx/d*e.speed*dt;
+  e.y+=dy/d*e.speed*dt;
 
-  e.x+=dx/d*alienSpeed*dt;
-  e.z+=dz/d*alienSpeed*dt;
-
-  e.attackCooldown=Math.max(0,e.attackCooldown-dt);
-
-  if(d<1.6&&e.attackCooldown<=0){
-   player.health-= (8+difficulty*2);
-   e.attackCooldown=.8;
-   say("⚠️ ALIEN ATTACKING YOU!");
+  if(d<22){
+   player.health-=dt*12;
   }
  }
 
- // GRADUALLY ADD MORE ALIENS
-
- if(enemies.length<Math.min(30,6+Math.floor(difficulty*2))){
-  if(Math.random()<dt*.15*difficulty)spawnEnemy();
- }
-
- // RESOURCES RESPAWN
-
- if(resources.length<35&&Math.random()<dt*.5){
-  spawnResource();
+ // New resources
+ spawnTimer+=dt;
+ if(spawnTimer>8){
+  spawnTimer=0;
+  if(resources.length<25)spawnResource();
  }
 
  player.health=Math.max(0,player.health);
-
  updateUI();
 
  if(player.health<=0){
-  dead=true;
-  document.exitPointerLock();
-  document.getElementById("death").style.display="block";
-  say("YOU DIED! REFRESH TO RESTART.");
+  gameOver=true;
+  say("YOU DIED ON XENORA-7!");
  }
 }
 
-// GAME LOOP
-
 function loop(time){
- const dt=Math.min((time-last)/1000||0,.04);
- last=time;
+ const dt=Math.min((time-lastTime)/1000||0,0.05);
+ lastTime=time;
+
  update(dt);
- render();
+ draw();
+
  requestAnimationFrame(loop);
 }
 
+loadGame();
 updateUI();
 requestAnimationFrame(loop);
-
 </script>
 </body>
 </html>
-
-
